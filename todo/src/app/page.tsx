@@ -1,5 +1,7 @@
 "use client";
 
+import { Input } from "@/components/chat/Input";
+import { Messages } from "@/components/chat/Messages";
 import { TodoItem } from "@/components/TodoItem";
 import { nanoid } from "nanoid";
 import { useState } from "react";
@@ -53,8 +55,11 @@ export default function Home() {
           labels={{
             title: "Todo List Copilot",
             initial: "Hi you! 👋 I can help you manage your todo list.",
+            placeholder: "Ask me to add, update or remove todos...",
           }}
           clickOutsideToClose={false}
+          Messages={Messages}
+          Input={Input}
         />
       </CopilotKit>
     </div>

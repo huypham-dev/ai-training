@@ -5,6 +5,7 @@ specifiers:
   '@copilotkit/react-textarea': 1.0.0-beta.2
   '@copilotkit/react-ui': 1.0.0-beta.2
   '@copilotkit/runtime': 1.0.0-beta.2
+  '@copilotkit/runtime-client-gql': 1.0.0-beta.2
   '@copilotkit/shared': 1.0.0-beta.2
   '@types/node': ^20
   '@types/react': ^18
@@ -15,6 +16,8 @@ specifiers:
   postcss: ^8
   react: ^18
   react-dom: ^18
+  react-markdown: 8.0.7
+  remark-gfm: 3.0.1
   tailwindcss: ^3.3.0
   typescript: ^5
 
@@ -23,11 +26,14 @@ dependencies:
   '@copilotkit/react-textarea': 1.0.0-beta.2_i2rphbmvvjouan7cdtjfftrzli
   '@copilotkit/react-ui': 1.0.0-beta.2_ldrqq4ddkzwykih5vpyejmhynu
   '@copilotkit/runtime': 1.0.0-beta.2
+  '@copilotkit/runtime-client-gql': 1.0.0-beta.2_react@18.3.1
   '@copilotkit/shared': 1.0.0-beta.2
   nanoid: 5.1.16
   next: 14.1.3_nnrd3gsncyragczmpvfhocinkq
   react: 18.3.1
   react-dom: 18.3.1_react@18.3.1
+  react-markdown: 8.0.7_ldrqq4ddkzwykih5vpyejmhynu
+  remark-gfm: 3.0.1
 
 devDependencies:
   '@types/node': 20.19.43
