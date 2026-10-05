@@ -42,8 +42,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## The Copilot-Specific parts of the code:
 
-1. Notice `<CopilotKit />` and `<CopilotPopup />` in `page.tsx`
+The app uses the CopilotKit v2 APIs (`@copilotkit/react-core/v2` and `@copilotkit/runtime/v2`).
 
-2. Notice `useCopilotReadable` in `page.tsx`
+1. Notice `<CopilotKitProvider />` in `components/copilot/CopilotProvider.tsx` (used by `layout.tsx`) and `<CopilotPopup />` in `components/copilot/TodoCopilotPopup.tsx`
 
-3. Notice the 2 `useCopilotAction` in `page.tsx`
+2. Notice `useAgentContext` in `hooks/useTodoCopilot.tsx`
+
+3. Notice the 3 `useFrontendTool` in `hooks/useTodoCopilot.tsx`
+
+4. Notice the runtime and its `BuiltInAgent` in `api/copilotkit/[[...slug]]/route.ts`

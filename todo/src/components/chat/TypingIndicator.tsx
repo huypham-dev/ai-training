@@ -1,20 +1,14 @@
-interface TypingIndicatorProps {
-  label?: string;
-}
-
-export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ label }) => {
+// Rendered through the `cursor` slot of the message view while the agent is running
+export const TypingIndicator = () => {
   return (
     <div
-      className="flex items-center gap-2"
+      className="ml-10 flex items-center gap-1 py-1"
       role="status"
-      aria-label={label ?? "Copilot is typing"}
+      aria-label="Copilot is typing"
     >
-      <span className="flex items-center gap-1 py-1">
-        <span className="h-2 w-2 rounded-full bg-purple-400 animate-bounce [animation-delay:-0.3s]" />
-        <span className="h-2 w-2 rounded-full bg-purple-400 animate-bounce [animation-delay:-0.15s]" />
-        <span className="h-2 w-2 rounded-full bg-purple-400 animate-bounce" />
-      </span>
-      {label && <span className="text-xs text-gray-500">{label}</span>}
+      <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 rounded-full bg-primary animate-bounce" />
     </div>
   );
 };

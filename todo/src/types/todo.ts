@@ -4,3 +4,5 @@ export interface Todo {
   isCompleted: boolean;
   assignedTo?: string;
 }
+
+export type TodoChanges = Partial<Omit<Todo, "id">>;
