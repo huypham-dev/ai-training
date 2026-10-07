@@ -59,8 +59,8 @@ export const TodoList: React.FC = () => {
         </p>
       )}
       {todos.length > 0 && (
-        <div className="rounded-xl border">
-          {groupedTodos.map((todo, index) => (
+        <div className="flex flex-col gap-3">
+          {groupedTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
@@ -71,7 +71,6 @@ export const TodoList: React.FC = () => {
               deleteTodo={deleteTodo}
               breakDownTodo={breakDownTodo}
               isCopilotBusy={isBusy}
-              hasBorder={index !== groupedTodos.length - 1}
             />
           ))}
         </div>

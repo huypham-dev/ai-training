@@ -8,12 +8,15 @@
   --color-primary-strong-hover: #005ebc;
   --color-secondary: #ff1493;
   --color-secondary-strong: #b8006b;
-  --color-tertiary: #00ffff;
+  --color-accent: #f59e0b;
+  /* Text on the accent tint: accent itself fails WCAG AA */
+  --color-accent-strong: #9a4a00;
   --color-ink: #1a1a2e;
   --color-ink-muted: #5b6072;
   --color-line: #e2e8f0;
   --color-surface: #ffffff;
   --color-surface-muted: #f8fafc;
+  --color-surface-sunken: #f1f5f9;
   --color-danger: #d92d20;
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
@@ -43,36 +46,5 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-line, currentColor);
-  }
-}
-
-/* The one aurora moment of the page: a slow mesh gradient behind the content */
-body::before {
-  content: "";
-  position: fixed;
-  inset: -25%;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(40% 40% at 25% 30%, rgb(0 128 255 / 0.35), transparent 70%),
-    radial-gradient(35% 35% at 75% 25%, rgb(255 20 147 / 0.22), transparent 70%),
-    radial-gradient(45% 45% at 60% 75%, rgb(0 255 255 / 0.28), transparent 70%);
-  filter: saturate(1.2);
-  animation: aurora 12s ease-in-out infinite alternate;
-}
-
-/* Only the transform is animated, so the gradient is never repainted */
-@keyframes aurora {
-  from {
-    transform: translate3d(-4%, -3%, 0) rotate(0deg) scale(1);
-  }
-  to {
-    transform: translate3d(4%, 3%, 0) rotate(8deg) scale(1.1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
   }
 }

@@ -60,7 +60,7 @@ export const TodoUpdateCard: React.FC<TodoUpdateCardProps> = (props) => {
         {previous.assignedTo !== todo.assignedTo && (
           <ChangeRow label="Assignee">
             {todo.assignedTo ? (
-              <span className="rounded-sm border border-secondary/30 bg-secondary/10 px-1.5 py-0.5 font-medium uppercase tracking-wide text-secondary-strong">
+              <span className="rounded-full border border-secondary/30 bg-secondary/10 px-2.5 py-0.5 font-medium text-secondary-strong">
                 {todo.assignedTo}
               </span>
             ) : (

@@ -11,11 +11,13 @@ interface TodoItemProps {
   deleteTodo: (id: string) => void;
   breakDownTodo: (todo: Todo) => void;
   isCopilotBusy: boolean;
-  hasBorder?: boolean;
 }
 
 const actionButtonClassName =
-  "ml-2 rounded-sm opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "rounded-sm text-ink-muted transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const pillClassName =
+  "rounded-full px-2.5 py-0.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const dateInputClassName =
   "ml-2 border rounded-xl px-2 py-1 text-sm text-ink focus:outline-2 focus:outline-offset-2 focus:outline-primary";
@@ -27,7 +29,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   deleteTodo,
   breakDownTodo,
   isCopilotBusy,
-  hasBorder,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -72,18 +73,85 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const dateRange = formatDateRange(todo.startDate, todo.dueDate);
 
+  const dates = isScheduling ? (
+    <div
+      className="flex flex-wrap items-center gap-2"
+      onKeyDown={handleDatesKeyDown}
+      // Close when the focus leaves both inputs, not when it moves between them
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          setIsScheduling(false);
+        }
+      }}
+    >
+      <label className="flex items-center text-xs text-ink-muted">
+        Start
+        <input
+          type="date"
+          className={dateInputClassName}
+          value={todo.startDate ?? ""}
+          max={todo.dueDate}
+          autoFocus
+          onChange={(e) =>
+            saveDates({ startDate: e.target.value || undefined })
+          }
+        />
+      </label>
+      <label className="flex items-center text-xs text-ink-muted">
+        Due
+        <input
+          type="date"
+          className={dateInputClassName}
+          value={todo.dueDate ?? ""}
+          min={todo.startDate}
+          onChange={(e) =>
+            saveDates({ dueDate: e.target.value || undefined })
+          }
+        />
+      </label>
+    </div>
+  ) : (
+    dateRange && (
+      <button
+        onClick={() => setIsScheduling(true)}
+        title="Change dates"
+        className={`${pillClassName} flex items-center gap-1 bg-surface-sunken text-ink-muted`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="w-4 h-4"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+          />
+        </svg>
+        {dateRange}
+      </button>
+    )
+  );
+
+  const hasMeta =
+    isAssigning || isScheduling || Boolean(todo.assignedTo || dateRange);
+
   return (
     <div
       className={
-        "flex items-center justify-between px-4 py-3 group motion-safe:animate-enter" +
-        (parent ? " pl-10" : "") +
-        (hasBorder ? " border-b" : "")
+        "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border bg-surface p-4 shadow-card motion-safe:animate-enter" +
+        (parent ? " ml-8" : "")
       }
     >
-      <div className="flex items-center flex-1 min-w-0">
+      {/* The basis makes the actions wrap below before the text gets too narrow */}
+      <div className="flex min-w-0 grow basis-64 items-start">
         {parent && (
           <span
-            className="mr-2 shrink-0 text-ink-muted"
+            className="mt-0.5 mr-2 shrink-0 text-ink-muted"
             title={`Sub-task of "${parent.text}"`}
           >
             <svg
@@ -104,8 +172,14 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             <span className="sr-only">Sub-task of {parent.text}</span>
           </span>
         )}
+        <span
+          className={`mt-2 mr-3 h-2 w-2 shrink-0 rounded-full ${
+            todo.isCompleted ? "bg-line" : "bg-accent"
+          }`}
+          aria-hidden="true"
+        />
         <input
-          className="h-5 w-5 shrink-0 accent-primary-strong"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-primary-strong"
           type="checkbox"
           checked={todo.isCompleted}
           aria-label={`Mark "${todo.text}" as completed`}
@@ -113,27 +187,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             updateTodo(todo.id, { isCompleted: !todo.isCompleted })
           }
         />
-        {isAssigning ? (
-          <InlineInput
-            className="ml-2 w-28 shrink-0"
-            initialValue={todo.assignedTo ?? ""}
-            placeholder="Assignee"
-            ariaLabel="Person assigned to this task"
-            onSubmit={saveAssignee}
-            onCancel={() => setIsAssigning(false)}
-          />
-        ) : (
-          todo.assignedTo && (
-            <button
-              onClick={() => setIsAssigning(true)}
-              title="Change assignee"
-              className="ml-2 shrink-0 text-xs rounded-sm border border-secondary/30 bg-secondary/10 px-1.5 py-0.5 font-medium uppercase tracking-wide text-secondary-strong"
-            >
-              {todo.assignedTo}
-            </button>
-          )
-        )}
-        <div className="ml-2 flex-1 min-w-0">
+        <div className="ml-3 flex-1 min-w-0">
           {isEditing ? (
             <InlineInput
               className="w-full"
@@ -146,69 +200,73 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             <span
               onDoubleClick={() => setIsEditing(true)}
               title="Double-click to edit"
-              className={`text-base leading-[1.6] break-words ${
+              className={`text-base font-semibold leading-[1.6] break-words ${
                 todo.isCompleted ? "text-ink-muted line-through" : "text-ink"
               }`}
             >
               {todo.text}
             </span>
           )}
-          {isScheduling ? (
-            <div
-              className="mt-1 flex flex-wrap items-center gap-2"
-              onKeyDown={handleDatesKeyDown}
-              // Close when the focus leaves both inputs, not when it moves between them
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget)) {
-                  setIsScheduling(false);
-                }
-              }}
-            >
-              <label className="flex items-center text-xs text-ink-muted">
-                Start
-                <input
-                  type="date"
-                  className={dateInputClassName}
-                  value={todo.startDate ?? ""}
-                  max={todo.dueDate}
-                  autoFocus
-                  onChange={(e) =>
-                    saveDates({ startDate: e.target.value || undefined })
-                  }
+          {hasMeta && (
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {isAssigning ? (
+                <InlineInput
+                  className="w-28"
+                  initialValue={todo.assignedTo ?? ""}
+                  placeholder="Assignee"
+                  ariaLabel="Person assigned to this task"
+                  onSubmit={saveAssignee}
+                  onCancel={() => setIsAssigning(false)}
                 />
-              </label>
-              <label className="flex items-center text-xs text-ink-muted">
-                Due
-                <input
-                  type="date"
-                  className={dateInputClassName}
-                  value={todo.dueDate ?? ""}
-                  min={todo.startDate}
-                  onChange={(e) =>
-                    saveDates({ dueDate: e.target.value || undefined })
-                  }
-                />
-              </label>
+              ) : (
+                todo.assignedTo && (
+                  <button
+                    onClick={() => setIsAssigning(true)}
+                    title="Change assignee"
+                    className={`${pillClassName} border border-secondary/30 bg-secondary/10 font-medium text-secondary-strong`}
+                  >
+                    {todo.assignedTo}
+                  </button>
+                )
+              )}
+              {dates}
             </div>
-          ) : (
-            dateRange && (
-              <button
-                onClick={() => setIsScheduling(true)}
-                title="Change dates"
-                className="block rounded-sm text-xs text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {dateRange}
-              </button>
-            )
           )}
         </div>
       </div>
-      <div className="flex items-center shrink-0">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        {/* just show for parent tasks */}
+        {!parent && (
+          <button
+            onClick={() => breakDownTodo(todo)}
+            disabled={isCopilotBusy}
+            aria-label="Break down with the copilot"
+            title="Break down with the copilot"
+            className="mr-1 flex items-center gap-1 rounded-full bg-accent/20 px-3 py-1 text-xs font-bold uppercase tracking-wide text-accent-strong transition duration-200 hover:bg-accent/30 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+              />
+            </svg>
+            Break down
+          </button>
+        )}
         <button
           onClick={() => setIsEditing(true)}
           aria-label="Edit task"
           title="Edit task"
-          className={`${actionButtonClassName} text-ink-muted`}
+          className={`${actionButtonClassName} hover:text-ink`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -225,36 +283,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             />
           </svg>
         </button>
-        {/* just show for parent tasks */}
-        {!parent && (
-          <button
-            onClick={() => breakDownTodo(todo)}
-            disabled={isCopilotBusy}
-            aria-label="Break down with the copilot"
-            title="Break down with the copilot"
-            className={`${actionButtonClassName} text-primary-strong disabled:cursor-not-allowed disabled:text-ink-muted`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
-              />
-            </svg>
-          </button>
-        )}
         <button
           onClick={() => setIsScheduling(true)}
           aria-label="Set dates"
           title="Set dates"
-          className={`${actionButtonClassName} text-primary-strong`}
+          className={`${actionButtonClassName} hover:text-ink`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -275,7 +308,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           onClick={() => setIsAssigning(true)}
           aria-label="Assign person"
           title="Assign person"
-          className={`${actionButtonClassName} text-primary-strong`}
+          className={`${actionButtonClassName} hover:text-ink`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -296,7 +329,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           onClick={() => deleteTodo(todo.id)}
           aria-label="Delete task"
           title="Delete task"
-          className={`${actionButtonClassName} text-danger`}
+          className={`${actionButtonClassName} hover:text-danger`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

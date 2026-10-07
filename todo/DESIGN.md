@@ -1,37 +1,39 @@
 # Design System
 
-Visual rules for the todo app and its copilot chat, based on [Aurora UI](https://designmd.app/library/aurora-ui). Follow them when adding or changing UI so new parts match the existing ones.
+Visual rules for the todo app and its copilot chat. The colors of the chat come from [Aurora UI](https://designmd.app/library/aurora-ui); the page is a plain white layout with one card per task. Follow them when adding or changing UI so new parts match the existing ones.
 
 Tokens are defined in the `@theme` block of `src/app/globals.css` and used as Tailwind CSS 4 utilities (`bg-primary`, `text-ink`, `shadow-card`). Use these tokens and do not add default Tailwind palette colors such as `blue-500`.
 
 ## Principles
 
-- One aurora moment per viewport. Here it is the page background: a slow mesh gradient in the three brand colors. Nothing else uses a gradient.
-- Content sits on plain white surfaces above the gradient, so text contrast never depends on the animation.
-- Slow beats fast. The background loop takes 12 seconds; UI feedback takes 200ms.
+- The page is plain white. There is no gradient, no glow and no animated background.
+- Every task is its own white card with a border and a soft shadow. The page itself has no card around it.
+- Color is used sparingly: dark `ink` for the main button, `accent` for the copilot action, tinted pills for details.
+- UI feedback takes 200ms.
 - Light theme only. There is no dark mode.
 
 ## Colors
 
 | Role | Token | Value | Used for |
 | --- | --- | --- | --- |
-| Primary | `primary` | `#0080FF` | Focus ring, typing dots, tints, background gradient |
-| Primary strong | `primary-strong` | `#0066CC` | Button fill, user chat bubble, checkbox, text and icons in the primary color |
-| Primary strong hover | `primary-strong-hover` | `#005EBC` | Hover of a primary button (8% darker) |
-| Secondary | `secondary` | `#FF1493` | Assignee badge tint and border, background gradient |
-| Secondary strong | `secondary-strong` | `#B8006B` | Assignee badge text |
-| Tertiary | `tertiary` | `#00FFFF` | Background gradient only |
-| Text | `ink` | `#1A1A2E` | Main text |
+| Primary | `primary` | `#0080FF` | Focus ring, typing dots, tints |
+| Primary strong | `primary-strong` | `#0066CC` | Chat send button, user chat bubble, checkbox, text and icons in the primary color |
+| Primary strong hover | `primary-strong-hover` | `#005EBC` | Hover of a `primary-strong` button (8% darker) |
+| Secondary | `secondary` | `#FF1493` | Assignee pill tint and border |
+| Secondary strong | `secondary-strong` | `#B8006B` | Assignee pill text |
+| Accent | `accent` | `#F59E0B` | Tint of the copilot action pill, dot of an open task |
+| Accent strong | `accent-strong` | `#9A4A00` | Text of the copilot action pill |
+| Text | `ink` | `#1A1A2E` | Main text, fill of the page's primary button |
 | Text muted | `ink-muted` | `#5B6072` | Labels, hints, completed todos, placeholders |
-| Border | `line` | `#E2E8F0` | All default borders |
-| Surface | `surface` | `#FFFFFF` | Cards, inputs, chat input bar |
-| Surface muted | `surface-muted` | `#F8FAFC` | Page base under the gradient, copilot bubble, resting chat input |
+| Border | `line` | `#E2E8F0` | All default borders, dot of a completed task |
+| Surface | `surface` | `#FFFFFF` | Page, cards, inputs, chat input bar |
+| Surface muted | `surface-muted` | `#F8FAFC` | Copilot bubble, resting chat input |
+| Surface sunken | `surface-sunken` | `#F1F5F9` | New task bar, date pill |
 | Danger | `danger` | `#D92D20` | Delete button, error card |
 
-`primary`, `secondary` and `tertiary` are the Aurora UI colors. The `-strong` variants are darker shades added for this app, because white text on `#0080FF` and magenta text on white do not reach WCAG AA.
+`primary` and `secondary` are Aurora UI colors. The `-strong` variants are darker shades added for this app, because white text on `#0080FF`, magenta text on white and amber text on its own tint do not reach WCAG AA.
 
-- Text on `primary-strong` is `white`.
-- Never put text on `tertiary`, and never use it as a text color.
+- Text on `primary-strong` and on `ink` is `white`.
 - No pure black. Use `ink`.
 
 ## Typography
@@ -40,57 +42,48 @@ Font: system UI stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui
 
 | Style | Classes | Used for |
 | --- | --- | --- |
-| H1 | `text-4xl font-bold tracking-tight` | Page title (2.25rem, 700) |
-| Body | `text-base leading-[1.6]` | Todo text, page text, main input (1rem / 1.6) |
+| H1 | `text-3xl font-bold tracking-tight` | Page title (1.875rem, 700) |
+| Body | `text-base leading-[1.6]` | Page text, main input (1rem / 1.6) |
+| Task title | `text-base font-semibold leading-[1.6]` | Text of a task on its card |
 | Small | `text-sm` | Chat messages, inline inputs, cards |
-| Label | `text-sm font-medium` | Label above an input |
-| Caption | `text-xs text-ink-muted` | Sender names, hints, tool progress |
-| Badge | `text-xs font-medium uppercase tracking-wide` | Assignee badge |
+| Caption | `text-xs text-ink-muted` | Sender names, hints, tool progress, task dates, task counts |
+| Pill | `text-xs` | Date pill, and with `font-medium` the assignee pill. Text is shown as typed, not uppercase |
+| Action pill | `text-xs font-bold uppercase tracking-wide` | Copilot action on a task card |
 
 Completed text: `text-ink-muted line-through`.
 
 ## Spacing and layout
 
 - Base unit: 0.5rem (8px).
-- Page: `min-h-[100dvh] px-6 py-12`, with one centered card of `max-w-2xl`. Never use `h-screen`.
-- Card padding: `p-6`.
-- Rows: `px-4 py-3`. Bubbles and chat cards: `px-4 py-2`.
+- Page: `min-h-[100dvh] px-6 py-12`, with one centered column of `max-w-3xl` and no card around it. Never use `h-screen`.
+- Task card padding: `p-4`. Between task cards: `gap-3`.
+- Bubbles and chat cards: `px-4 py-2`.
 - Between blocks on the page: `mb-6`. Between chat messages: `mb-4`.
-- Between items in a row: `ml-2`.
+- Between the actions of a task card and between its pills: `gap-2`.
 - Chat bubbles: `max-w-[80%]`.
-- Chat content under a copilot bubble (progress label, typing dots): `ml-10`, so it lines up with the bubble and not with the avatar.
+- Chat content under a copilot bubble (progress label, typing dots, suggestion pills): `ml-10`, so it lines up with the bubble and not with the avatar.
 
 ## Shape and elevation
 
 | Radius | Used for |
 | --- | --- |
-| `rounded-xl` (0.75rem) | Buttons, inputs, cards, list container, chat bubbles |
-| `rounded-sm` (4px) | Badges, icon buttons, the tight corner of a chat bubble |
-| `rounded-full` | Avatar, typing dots |
+| `rounded-xl` (0.75rem) | Buttons, inputs, cards, chat bubbles |
+| `rounded-sm` (4px) | Icon buttons, the tight corner of a chat bubble |
+| `rounded-full` | Pills, the status dot, avatar, typing dots |
 
 Chat bubbles have one tight corner on the side of the sender: `rounded-tl-sm` for the copilot, `rounded-tr-sm` for the user.
 
-Shadow: `shadow-card` (`0 2px 12px rgb(0 0 0 / 0.06)`) on cards and chat bubbles, always together with a 1px border on white surfaces. There is no other shadow and no glow.
-
-## Background
-
-The gradient is drawn by `body::before` in `globals.css`:
-
-- Three radial gradients, one per brand color, at 22% to 35% opacity over `surface-muted`.
-- `filter: saturate(1.2)`.
-- Animation `aurora`: 12s, `ease-in-out`, `infinite alternate`. Only `transform` is animated.
-- Fixed behind the content (`z-index: -1`) and ignores pointer events.
+Shadow: `shadow-card` (`0 2px 12px rgb(0 0 0 / 0.06)`) on task cards, chat cards and chat bubbles, always together with a 1px border on white surfaces. There is no other shadow and no glow.
 
 ## Motion
 
 | Motion | Rule |
 | --- | --- |
-| Background | 12s loop, see above |
-| Entry | `motion-safe:animate-enter`: fade and move up 16px over 480ms ease-out. Used for new todo rows |
+| Entry | `motion-safe:animate-enter`: fade and move up 16px over 480ms ease-out. Used for new task cards |
 | Feedback | `transition duration-200` on color, opacity, shadow or transform |
 | Typing indicator | Three dots with `animate-bounce` and staggered delays |
 
-Animate `transform` and `opacity` only. With `prefers-reduced-motion`, the background and the entry animation do not run.
+Animate `transform` and `opacity` only. With `prefers-reduced-motion`, the entry animation does not run.
 
 Do not put `animate-enter` on an element that contains the copilot popup. The animation leaves a transform on the element, and the popup would then be positioned against it and not against the window.
 
@@ -98,9 +91,9 @@ Do not put `animate-enter` on an element that contains the copilot popup. The an
 
 Heroicons, outline style, as inline SVG with `strokeWidth={1.5}` and `stroke="currentColor"`.
 
-- Size `w-5 h-5` in rows, `w-4 h-4` inside a button or the avatar.
+- Size `w-5 h-5` on task cards and in the new task bar, `w-4 h-4` inside a button, a pill or the avatar.
 - Color comes from the text color of the parent.
-- Every icon button has an `aria-label` and a `title`.
+- Every icon button has an `aria-label` and a `title`. An icon next to text is `aria-hidden`.
 - No emoji in the UI.
 
 ## States
@@ -108,10 +101,10 @@ Heroicons, outline style, as inline SVG with `strokeWidth={1.5}` and `stroke="cu
 | State | Rule |
 | --- | --- |
 | Focus | 2px ring in `primary`, offset 2px: `outline-2 outline-offset-2 outline-primary` with `focus:` on inputs and `focus-visible:` on buttons |
-| Hover (primary button) | `hover:bg-primary-strong-hover hover:shadow-card` |
+| Hover (primary button) | `hover:bg-ink/90 hover:shadow-card` on the page, `hover:bg-primary-strong-hover` in the chat |
 | Active (primary button) | `active:translate-y-px` |
 | Disabled | `disabled:opacity-40 disabled:cursor-not-allowed` |
-| Hover reveal | Row actions are `opacity-0` and show with `group-hover:opacity-100` and `focus-visible:opacity-100` |
+| Card actions | Always visible, so they also work on touch. Icon buttons are `text-ink-muted` and turn `text-ink` on hover, the delete button `text-danger` |
 | Loading | Muted caption text such as "Updating the task...". No spinners |
 | Error | White card with `border-danger text-danger` |
 
@@ -119,27 +112,39 @@ Heroicons, outline style, as inline SVG with `strokeWidth={1.5}` and `stroke="cu
 
 | Component | File | Look |
 | --- | --- | --- |
-| Page card | `app/page.tsx` | `rounded-xl border bg-surface p-6 shadow-card` |
-| Primary button | `components/AddTodoForm.tsx` | `rounded-xl bg-primary-strong px-4 py-3 font-semibold text-white` |
-| Text input | `components/AddTodoForm.tsx` | Label above, `rounded-xl border bg-surface p-3` |
+| Page header | `components/AddTodoForm.tsx` | The H1 on the left and the primary button on the right, `mb-6 flex items-center justify-between` |
+| Primary button | `components/AddTodoForm.tsx` | "New todo" with a plus icon: `rounded-xl bg-ink px-4 py-3 font-semibold text-white`. It submits the new task bar, and with an empty bar it moves the focus there |
+| New task bar | `components/AddTodoForm.tsx` | `rounded-xl bg-surface-sunken px-4 py-3`, no border. A muted clipboard icon, then a transparent input with a placeholder and an `aria-label`. The focus ring is on the bar (`focus-within:`). Enter adds the task |
 | Inline input | `components/InlineInput.tsx` | `rounded-xl border px-2 py-1 text-sm` |
-| Todo row | `components/TodoItem.tsx` | `px-4 py-3`, `border-b` between rows, actions on hover |
-| Assignee badge | `components/TodoItem.tsx` | `rounded-sm border border-secondary/30 bg-secondary/10 text-secondary-strong` |
+| Task counts | `components/TodoList.tsx` | Caption right above the task cards with `mb-2`, such as "3 active · 2 completed". Sub-tasks are counted too. Hidden when there are no tasks |
+| Task card | `components/TodoItem.tsx` | `rounded-xl border bg-surface p-4 shadow-card`, one per task, in `flex flex-col gap-3`. From the left: a status dot (`h-2 w-2 rounded-full`, `bg-accent` when open, `bg-line` when completed), the checkbox, then the task title with the pills under it, and the actions on the right. The actions wrap below the text on a narrow screen. A sub-task sits right below its parent with `ml-8` and a muted arrow-turn-down-right icon before the dot |
+| Card actions | `components/TodoItem.tsx` | In `ml-auto flex items-center gap-2`: the copilot action pill, then the icon buttons edit, dates, assign and delete |
+| Copilot action pill | `components/TodoItem.tsx` | "Break down" with the sparkles icon: `rounded-full bg-accent/20 px-3 py-1 text-accent-strong`, hover `bg-accent/30`. Only on a task that is not a sub-task |
+| Pills | `components/TodoItem.tsx` | Under the task title in `mt-1 flex flex-wrap items-center gap-2`, `rounded-full px-2.5 py-0.5 text-xs`. A task with no assignee and no dates has no second line |
+| Assignee pill | `components/TodoItem.tsx` | `rounded-full border border-secondary/30 bg-secondary/10 font-medium text-secondary-strong`. A click edits the assignee |
+| Date pill | `components/TodoItem.tsx` | `bg-surface-sunken text-ink-muted` with a calendar icon, such as "Oct 7, 2026 – Oct 12, 2026", "Starts Oct 7, 2026" or "Due Oct 12, 2026". A click opens the date inputs |
+| Date inputs | `components/TodoItem.tsx` | Opened by the calendar action or by clicking the date pill, and replace the pill. Two `type="date"` inputs with the inline input look, each after a caption label ("Start", "Due"). A change is saved at once. They close on Enter, Escape or when the focus leaves both |
 | Copilot avatar | `components/chat/SystemMessage.tsx` | Round, `border-primary/30 bg-primary/10`, sparkles icon |
 | Copilot bubble | `components/chat/SystemMessage.tsx` | `rounded-xl border bg-surface-muted shadow-card` |
 | User bubble | `components/chat/UserMessage.tsx` | Right aligned, `rounded-xl bg-primary-strong text-white shadow-card` |
 | Chat input | `components/chat/Input.tsx` | `rounded-xl` field with a square `primary-strong` send button |
+| Page suggestions | `components/TodoSuggestions.tsx` | Row of suggestion pills under the new task bar, after the caption "Ask the copilot". `mb-6 flex flex-wrap gap-2` |
+| Suggestion pill | `components/chat/SuggestionPill.tsx` | `rounded-xl border bg-surface px-3 py-1 text-xs font-medium text-primary-strong`, hover `bg-primary/10`. Not a primary button |
+| Delete confirmation | `components/chat/TodoDeleteCard.tsx` | Same card as the update card, with a `text-danger` question and two small buttons on the right: "Keep" (`border bg-surface text-ink`) and "Delete" (`bg-danger text-white`). After the answer it shows a muted "Task deleted" or "Task kept" |
+| Cleared card | `components/chat/TodoClearCard.tsx` | Same card as the update card. A muted title counts the cleared tasks, such as "2 completed tasks cleared", and they are listed below it as completed text. With nothing to clear it only shows "No completed tasks to clear" |
+| Added card | `components/chat/TodoAddCard.tsx` | Same card as the update card. The title is `text-primary-strong` with a check-circle icon (`w-4 h-4`) and counts the added tasks, which are listed below it. A task with dates shows them as a caption after its text |
 | Update card | `components/chat/TodoUpdateCard.tsx` | `rounded-xl border bg-surface shadow-card` |
 | Typing indicator | `components/chat/TypingIndicator.tsx` | Three bouncing `primary` dots |
 
 ## Do and don't
 
-- Do keep the gradient to the page background and to three colors.
-- Do reuse the assignee badge classes wherever a person is shown.
+- Do keep the page white and put content on cards.
+- Do reuse the assignee pill classes wherever a person is shown.
+- Do format dates with `formatDate` and `formatDateRange` from `utils/date.ts` wherever a date is shown.
 - Do keep one primary button per view.
-- Do put a label above every standalone input.
+- Do give every input a label: a visible one, or an `aria-label` when it has a placeholder like the new task bar.
 - Do give long text `break-words` and `min-w-0` so it wraps inside flex rows.
-- Don't add a second gradient, a glow or an animated background inside cards or the chat.
-- Don't speed the background up. A loop under 8 seconds reads as nervous.
-- Don't use `primary` or `secondary` for text. Use their `-strong` variants.
+- Don't add a gradient, a glow or an animated background.
+- Don't hide the actions of a task card until hover.
+- Don't use `primary`, `secondary` or `accent` for text. Use their `-strong` variants.
 - Don't use emoji as icons.

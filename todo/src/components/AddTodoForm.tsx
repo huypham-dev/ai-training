@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface AddTodoFormProps {
   addTodo: (text: string) => void;
@@ -7,41 +7,75 @@ interface AddTodoFormProps {
 export const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo }) => {
   const [input, setInput] = useState("");
 
-  const submit = () => {
-    // Keep the input as it is when there is nothing to add
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // With nothing to add, the button in the header only leads to the input
     if (input.trim() === "") {
+      inputRef.current?.focus();
       return;
     }
     addTodo(input);
     setInput("");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      submit();
-    }
-  };
-
   return (
     <>
-      <label htmlFor="new-todo" className="mb-2 block text-sm font-medium">
-        New task
-      </label>
-      <div className="flex mb-6">
-        <input
-          id="new-todo"
-          className="flex-1 mr-2 rounded-xl border bg-surface p-3 focus:outline-2 focus:outline-offset-2 focus:outline-primary"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">My Todos</h1>
         <button
-          className="rounded-xl bg-primary-strong px-4 py-3 font-semibold text-white transition duration-200 hover:bg-primary-strong-hover hover:shadow-card active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          onClick={submit}
+          type="submit"
+          form="new-todo-form"
+          className="flex shrink-0 items-center gap-1 rounded-xl bg-ink px-4 py-3 font-semibold text-white transition duration-200 hover:bg-ink/90 hover:shadow-card active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          Add Todo
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+          New todo
         </button>
       </div>
+      <form
+        id="new-todo-form"
+        onSubmit={submit}
+        className="mb-6 flex items-center gap-3 rounded-xl bg-surface-sunken px-4 py-3 text-ink-muted focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="w-5 h-5 shrink-0"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
+          />
+        </svg>
+        <input
+          ref={inputRef}
+          className="min-w-0 flex-1 bg-transparent text-base leading-[1.6] text-ink outline-none placeholder:text-ink-muted"
+          value={input}
+          placeholder="Add an item to your todo list..."
+          aria-label="New task"
+          onChange={(e) => setInput(e.target.value)}
+        />
+      </form>
     </>
   );
 };

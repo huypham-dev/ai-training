@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-surface-muted text-ink antialiased">
+      <body className="bg-surface text-ink antialiased">
         <CopilotProvider>{children}</CopilotProvider>
       </body>
     </html>
