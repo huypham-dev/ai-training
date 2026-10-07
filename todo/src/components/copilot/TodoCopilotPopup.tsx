@@ -2,12 +2,14 @@
 
 import { AssistantMessage } from "@/components/chat/AssistantMessage";
 import { Input } from "@/components/chat/Input";
+import { SuggestionPill } from "@/components/chat/SuggestionPill";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { UserMessage } from "@/components/chat/UserMessage";
 import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import {
   CopilotChatAssistantMessage,
   CopilotChatInput,
+  CopilotChatSuggestionPill,
   CopilotChatUserMessage,
   CopilotPopup,
 } from "@copilotkit/react-core/v2";
@@ -26,6 +28,12 @@ const messageView = {
   cursor: TypingIndicator,
 };
 
+// `ml-10` lines the suggestions up with the copilot bubble above them
+const suggestionView = {
+  suggestion: SuggestionPill as typeof CopilotChatSuggestionPill,
+  className: "ml-10 mb-3",
+};
+
 // The copilot chat popup with the custom chat components of this app
 export const TodoCopilotPopup: React.FC = () => {
   return (
@@ -35,6 +43,7 @@ export const TodoCopilotPopup: React.FC = () => {
       labels={labels}
       welcomeScreen={WelcomeScreen}
       messageView={messageView}
+      suggestionView={suggestionView}
       input={Input as typeof CopilotChatInput}
     />
   );

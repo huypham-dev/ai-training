@@ -7,6 +7,7 @@ import { TodoChanges } from "@/types/todo";
 import {
   ToolCallStatus,
   useAgentContext,
+  useConfigureSuggestions,
   useFrontendTool,
 } from "@copilotkit/react-core/v2";
 import { z } from "zod";
@@ -54,6 +55,54 @@ const deleteTodoParameters = z.object({
   id: z.string().describe("The id of the todo item to delete."),
 });
 
+// Defined outside the hook, so the suggestions are not reloaded on every render
+const emptyListSuggestions = {
+  available: "before-first-message" as const,
+  suggestions: [
+    {
+      title: "Plan my day",
+      message: "Help me plan my day. Add a few tasks to my todo list.",
+    },
+    {
+      title: "Add a grocery run",
+      message: "Add the tasks for a grocery run to my todo list.",
+    },
+    {
+      title: "Break down a goal",
+      message:
+        "I have a goal. Ask me what it is, then break it down into tasks.",
+    },
+  ],
+};
+
+const filledListSuggestions = {
+  available: "before-first-message" as const,
+  suggestions: [
+    {
+      title: "What is left to do?",
+      message: "Which tasks on my todo list are still open?",
+    },
+    {
+      title: "Mark everything as done",
+      message: "Mark all tasks on my todo list as completed.",
+    },
+    {
+      title: "Remove completed tasks",
+      message: "Delete all completed tasks from my todo list.",
+    },
+  ],
+};
+
+const followUpSuggestions = {
+  available: "after-first-message" as const,
+  instructions:
+    "Suggest short next steps for managing the user's todo list, based on the " +
+    "items that are on it now: for example completing, assigning, renaming or " +
+    "removing a specific item, or adding tasks that are still missing for a goal. " +
+    "Keep each title under 30 characters.",
+  maxSuggestions: 1,
+};
+
 // Connects the todo list to the copilot: the agent can read the list and
 // change it through the tools below
 export const useTodoCopilot = ({
@@ -67,6 +116,12 @@ export const useTodoCopilot = ({
     description: "The user's todo list.",
     value: JSON.stringify(todos),
   });
+
+  // The starter prompts depend on whether there is something to manage yet
+  useConfigureSuggestions(
+    todos.length === 0 ? emptyListSuggestions : filledListSuggestions,
+  );
+  useConfigureSuggestions(followUpSuggestions);
 
   // Tool handlers are registered once, so they must only use the stable
   // functions of the store and read the list through `getTodos`

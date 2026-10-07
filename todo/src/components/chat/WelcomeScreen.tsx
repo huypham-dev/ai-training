@@ -18,7 +18,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <div className="flex-1 overflow-y-auto px-6 pt-4">
         {welcomeMessage && <SystemMessage content={welcomeMessage} />}
       </div>
-      {suggestionView}
+      <div className="px-6">{suggestionView}</div>
       {input}
     </div>
   );
