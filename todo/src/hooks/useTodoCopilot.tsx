@@ -31,6 +31,12 @@ const updateTodoListParameters = z.object({
           .describe(
             "The person assigned to the todo item. If you don't know, assign it to 'YOU'.",
           ),
+        parentId: z
+          .string()
+          .optional()
+          .describe(
+            "The id of the todo item this one was broken down from. Only set it for a sub-task.",
+          ),
       }),
     )
     .describe("The new and updated todo list items."),
@@ -131,7 +137,15 @@ export const useTodoCopilot = ({
     description: "Update the users todo list",
     parameters: updateTodoListParameters,
     handler: async ({ items }) => {
-      upsertTodos(items);
+      // The model tends to leave `parentId` out when it sends a sub-task again
+      upsertTodos(
+        items.map((item) => ({
+          ...item,
+          parentId:
+            item.parentId ??
+            getTodos().find((todo) => todo.id === item.id)?.parentId,
+        })),
+      );
       // Without an explicit result the model tends to call the tool again
       return (
         `Saved ${items.length} todo item(s). The list now has ${getTodos().length} item(s). ` +
