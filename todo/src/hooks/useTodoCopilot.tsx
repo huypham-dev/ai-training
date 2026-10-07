@@ -1,5 +1,9 @@
 import { TodoAddCard, TodoListResult } from "@/components/chat/TodoAddCard";
 import {
+  TodoClearCard,
+  TodoClearResult,
+} from "@/components/chat/TodoClearCard";
+import {
   TodoDeleteCard,
   TodoDeleteResult,
 } from "@/components/chat/TodoDeleteCard";
@@ -92,6 +96,8 @@ const deleteTodoParameters = z.object({
   id: z.string().describe("The id of the todo item to delete."),
 });
 
+const clearCompletedTodosParameters = z.object({});
+
 // The model tends to leave a date out when it sends an item again, so only an
 // empty string removes it. A value that is not a date keeps the current one
 const resolveDate = (value: string | undefined, current: string | undefined) => {
@@ -104,7 +110,10 @@ const resolveDate = (value: string | undefined, current: string | undefined) => 
 const invalidDateError = (value: string) =>
   `"${value}" is not a date in the format YYYY-MM-DD.`;
 
-// Defined outside the hook, so the suggestions are not reloaded on every render
+// Defined outside the hook, so the suggestions are not reloaded on every render.
+// Together the two sets show one example of everything the copilot can do
+
+// An empty list can only be added to: plain tasks, a date, an assignee, sub-tasks
 const emptyListSuggestions = {
   available: "before-first-message" as const,
   suggestions: [
@@ -113,13 +122,17 @@ const emptyListSuggestions = {
       message: "Help me plan my day. Add a few tasks to my todo list.",
     },
     {
-      title: "Add a grocery run",
-      message: "Add the tasks for a grocery run to my todo list.",
+      title: "Add a task due Friday",
+      message: "Add a task to call the dentist, due this Friday.",
     },
     {
-      title: "Break down a goal",
+      title: "Add a task for Alex",
+      message: "Add a task to review the budget and assign it to Alex.",
+    },
+    {
+      title: "Plan a goal with sub-tasks",
       message:
-        "I have a goal. Ask me what it is, then break it down into tasks.",
+        "Add a task to plan a team offsite, then break it down into sub-tasks.",
     },
   ],
 };
@@ -132,12 +145,33 @@ const filledListSuggestions = {
       message: "Which tasks on my todo list are still open?",
     },
     {
-      title: "Mark everything as done",
-      message: "Mark all tasks on my todo list as completed.",
+      title: "Break down a task",
+      message: "Break down the first open task on my todo list into sub-tasks.",
     },
     {
-      title: "Remove completed tasks",
-      message: "Delete all completed tasks from my todo list.",
+      title: "Reword a task",
+      message: "Reword the first open task on my todo list to be more specific.",
+    },
+    {
+      title: "Assign a task to Alex",
+      message: "Assign the first open task on my todo list to Alex.",
+    },
+    {
+      title: "Set dates on a task",
+      message:
+        "Make the first open task on my todo list start today and be due in three days.",
+    },
+    {
+      title: "Complete a task",
+      message: "Mark the first open task on my todo list as completed.",
+    },
+    {
+      title: "Delete a task",
+      message: "Delete the last task on my todo list.",
+    },
+    {
+      title: "Clear completed tasks",
+      message: "Clear all completed tasks from my todo list.",
     },
   ],
 };
@@ -146,9 +180,11 @@ const followUpSuggestions = {
   available: "after-first-message" as const,
   instructions:
     "Suggest short next steps for managing the user's todo list, based on the " +
-    "items that are on it now: for example completing, assigning, renaming or " +
-    "removing a specific item, or adding tasks that are still missing for a goal. " +
-    "Keep each title under 30 characters.",
+    "items that are on it now. Pick something the user has not done yet in this " +
+    "conversation: adding tasks that are still missing for a goal, breaking a " +
+    "specific item down into sub-tasks, renaming, completing or reopening it, " +
+    "assigning it to someone, setting its start date or due date, deleting it, " +
+    "or clearing the completed items. Keep each title under 30 characters.",
   maxSuggestions: 1,
 };
 
@@ -160,6 +196,7 @@ export const useTodoCopilot = ({
   updateTodo,
   deleteTodo,
   upsertTodos,
+  clearCompletedTodos,
 }: TodoStore) => {
   useAgentContext({
     description: "The user's todo list.",
@@ -278,6 +315,31 @@ export const useTodoCopilot = ({
         <TodoUpdateCard result={result} />
       ) : (
         <ToolProgress label="Updating the task..." />
+      ),
+  });
+
+  useFrontendTool({
+    name: "clearCompletedTodos",
+    description:
+      "Remove every completed todo item from the list in one step. " +
+      "It takes no arguments and does not ask the user to confirm.",
+    parameters: clearCompletedTodosParameters,
+    handler: async (): Promise<TodoClearResult> => {
+      const cleared = clearCompletedTodos();
+      return {
+        cleared,
+        note:
+          cleared.length === 0
+            ? "There were no completed todo items, so nothing was removed."
+            : `Removed ${cleared.length} completed todo item(s). ` +
+              "The request is done, do not call this tool again for it.",
+      };
+    },
+    render: ({ status, result }) =>
+      status === ToolCallStatus.Complete ? (
+        <TodoClearCard result={result} />
+      ) : (
+        <ToolProgress label="Clearing completed tasks..." />
       ),
   });
 

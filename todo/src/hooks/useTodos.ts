@@ -11,6 +11,8 @@ export interface TodoStore {
   deleteTodo: (id: string) => void;
   // Replaces the items that already exist and appends the others
   upsertTodos: (items: Todo[]) => void;
+  // Removes every completed item and returns the removed ones
+  clearCompletedTodos: () => Todo[];
 }
 
 export const useTodos = (): TodoStore => {
@@ -78,5 +80,19 @@ export const useTodos = (): TodoStore => {
     [commit],
   );
 
-  return { todos, getTodos, addTodo, updateTodo, deleteTodo, upsertTodos };
+  const clearCompletedTodos = useCallback(() => {
+    const cleared = todosRef.current.filter((todo) => todo.isCompleted);
+    commit((todos) => todos.filter((todo) => !todo.isCompleted));
+    return cleared;
+  }, [commit]);
+
+  return {
+    todos,
+    getTodos,
+    addTodo,
+    updateTodo,
+    deleteTodo,
+    upsertTodos,
+    clearCompletedTodos,
+  };
 };

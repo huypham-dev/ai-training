@@ -46,11 +46,18 @@ export const TodoList: React.FC = () => {
   };
 
   const groupedTodos = groupByParent(todos);
+  const completedCount = todos.filter((todo) => todo.isCompleted).length;
+  const activeCount = todos.length - completedCount;
 
   return (
     <div>
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
+      {todos.length > 0 && (
+        <p className="mb-2 text-xs text-ink-muted" aria-live="polite">
+          {activeCount} active · {completedCount} completed
+        </p>
+      )}
       {todos.length > 0 && (
         <div className="rounded-xl border">
           {groupedTodos.map((todo, index) => (
