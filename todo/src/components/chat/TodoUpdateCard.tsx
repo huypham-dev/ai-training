@@ -1,4 +1,5 @@
 import { Todo } from "@/types/todo";
+import { formatDate } from "@/utils/date";
 
 // Result returned by the updateTodo copilot action
 export type TodoUpdateResult =
@@ -65,6 +66,16 @@ export const TodoUpdateCard: React.FC<TodoUpdateCardProps> = (props) => {
             ) : (
               "Unassigned"
             )}
+          </ChangeRow>
+        )}
+        {previous.startDate !== todo.startDate && (
+          <ChangeRow label="Start">
+            {todo.startDate ? formatDate(todo.startDate) : "Removed"}
+          </ChangeRow>
+        )}
+        {previous.dueDate !== todo.dueDate && (
+          <ChangeRow label="Due">
+            {todo.dueDate ? formatDate(todo.dueDate) : "Removed"}
           </ChangeRow>
         )}
       </ul>
