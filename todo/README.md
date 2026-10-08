@@ -44,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 The app uses the CopilotKit v2 APIs (`@copilotkit/react-core/v2` and `@copilotkit/runtime/v2`).
 
-1. Notice `<CopilotKitProvider />` in `components/copilot/CopilotProvider.tsx` (used by `layout.tsx`) and `<CopilotPopup />` in `components/copilot/TodoCopilotPopup.tsx`
+1. Notice `<CopilotKitProvider />` in `components/copilot/CopilotProvider.tsx` (used by `layout.tsx`) and `<CopilotChat />` in `components/copilot/TodoCopilotChat.tsx`
 
 2. Notice `useAgentContext` in `hooks/useTodoCopilot.tsx`
 

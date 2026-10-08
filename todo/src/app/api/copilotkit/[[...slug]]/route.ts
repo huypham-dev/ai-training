@@ -1,5 +1,6 @@
 import {
   BuiltInAgent,
+  CopilotKitIntelligence,
   CopilotRuntime,
   createCopilotRuntimeHandler,
 } from "@copilotkit/runtime/v2";
@@ -135,14 +136,25 @@ Reply: the open tasks as a short list.
 - Never say a change was made unless the tool result confirms it.
 `.trim();
 
-const runtime = new CopilotRuntime({
-  agents: {
-    default: new BuiltInAgent({
-      model: "openai/gpt-4o-mini",
-      prompt,
-    }),
-  },
-});
+const agents = {
+  default: new BuiltInAgent({
+    model: "openai/gpt-4o-mini",
+    prompt,
+  }),
+};
+
+const intelligenceApiKey = process.env.CPK_INTELLIGENCE_API_KEY;
+
+// Threads are stored by CopilotKit Intelligence. Without its key the chat
+// still works, but nothing is saved and the threads drawer stays empty
+const runtime = intelligenceApiKey
+  ? new CopilotRuntime({
+      agents,
+      intelligence: new CopilotKitIntelligence({ apiKey: intelligenceApiKey }),
+      // The app has no sign-in, so every visitor shares the threads of one user
+      identifyUser: () => ({ id: "local-user", name: "Local user" }),
+    })
+  : new CopilotRuntime({ agents });
 
 const handler = createCopilotRuntimeHandler({
   runtime,

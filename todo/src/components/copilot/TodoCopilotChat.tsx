@@ -7,15 +7,14 @@ import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { UserMessage } from "@/components/chat/UserMessage";
 import { WelcomeScreen } from "@/components/chat/WelcomeScreen";
 import {
+  CopilotChat,
   CopilotChatAssistantMessage,
   CopilotChatInput,
   CopilotChatSuggestionPill,
   CopilotChatUserMessage,
-  CopilotPopup,
 } from "@copilotkit/react-core/v2";
 
 const labels = {
-  modalHeaderTitle: "Todo List Copilot",
   welcomeMessageText: "Hi you! I can help you manage your todo list.",
   chatInputPlaceholder: "Ask me to add, update or remove todos...",
 };
@@ -34,17 +33,21 @@ const suggestionView = {
   className: "ml-10 mb-3",
 };
 
-// The copilot chat popup with the custom chat components of this app
-export const TodoCopilotPopup: React.FC = () => {
+// The copilot chat with the custom chat components of this app, as a panel
+// next to the page
+export const TodoCopilotChat: React.FC = () => {
   return (
-    <CopilotPopup
-      defaultOpen={true}
-      clickOutsideToClose={false}
-      labels={labels}
-      welcomeScreen={WelcomeScreen}
-      messageView={messageView}
-      suggestionView={suggestionView}
-      input={Input as typeof CopilotChatInput}
-    />
+    <aside
+      aria-label="Todo List Copilot"
+      className="h-[70dvh] shrink-0 border-t lg:sticky lg:top-0 lg:h-[100dvh] lg:w-96 lg:border-l lg:border-t-0"
+    >
+      <CopilotChat
+        labels={labels}
+        welcomeScreen={WelcomeScreen}
+        messageView={messageView}
+        suggestionView={suggestionView}
+        input={Input as typeof CopilotChatInput}
+      />
+    </aside>
   );
 };

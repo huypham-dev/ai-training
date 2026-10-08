@@ -24,28 +24,6 @@ export const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo }) => {
     <>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">My Todos</h1>
-        <button
-          type="submit"
-          form="new-todo-form"
-          className="flex shrink-0 items-center gap-1 rounded-xl bg-ink px-4 py-3 font-semibold text-white transition duration-200 hover:bg-ink/90 hover:shadow-card active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
-          </svg>
-          New todo
-        </button>
       </div>
       <form
         id="new-todo-form"

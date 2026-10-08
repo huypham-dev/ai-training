@@ -55,7 +55,7 @@ Completed text: `text-ink-muted line-through`.
 ## Spacing and layout
 
 - Base unit: 0.5rem (8px).
-- Page: `min-h-[100dvh] px-6 py-12`, with one centered column of `max-w-3xl` and no card around it. Never use `h-screen`.
+- Page: a `flex min-h-[100dvh]` row with the threads drawer on the left, `main` in the middle and the chat panel on the right. Below `lg` the chat panel sits under `main`. `main` is `min-w-0 flex-1 px-6 py-12`, with one centered column of `max-w-3xl` and no card around it. Never use `h-screen`.
 - Task card padding: `p-4`. Between task cards: `gap-3`.
 - Bubbles and chat cards: `px-4 py-2`.
 - Between blocks on the page: `mb-6`. Between chat messages: `mb-4`.
@@ -84,8 +84,6 @@ Shadow: `shadow-card` (`0 2px 12px rgb(0 0 0 / 0.06)`) on task cards, chat cards
 | Typing indicator | Three dots with `animate-bounce` and staggered delays |
 
 Animate `transform` and `opacity` only. With `prefers-reduced-motion`, the entry animation does not run.
-
-Do not put `animate-enter` on an element that contains the copilot popup. The animation leaves a transform on the element, and the popup would then be positioned against it and not against the window.
 
 ## Icons
 
@@ -135,6 +133,8 @@ Heroicons, outline style, as inline SVG with `strokeWidth={1.5}` and `stroke="cu
 | Added card | `components/chat/TodoAddCard.tsx` | Same card as the update card. The title is `text-primary-strong` with a check-circle icon (`w-4 h-4`) and counts the added tasks, which are listed below it. A task with dates shows them as a caption after its text |
 | Update card | `components/chat/TodoUpdateCard.tsx` | `rounded-xl border bg-surface shadow-card` |
 | Typing indicator | `components/chat/TypingIndicator.tsx` | Three bouncing `primary` dots |
+| Chat panel | `components/copilot/TodoCopilotChat.tsx` | The copilot chat as a panel right of the page, not a popup: `lg:sticky lg:top-0 lg:h-[100dvh] lg:w-96 lg:border-l`. Below `lg` it sits under the page with `h-[70dvh] border-t`. It has no header and no card around it |
+| Threads drawer | `components/copilot/TodoThreadsDrawer.tsx` | The prebuilt CopilotKit drawer with the saved conversations, in a `sticky top-0 h-[100dvh] shrink-0` sidebar left of the page. It renders in a shadow root, so it is not styled with utility classes: its colors come from the `--cpk-drawer-*` variables, which the sidebar sets to the tokens of this app (`surface`, `ink`, `ink-muted`, `surface-sunken`, `line`, `danger`, `primary` for the focus ring). Its layout, radius and width are the defaults of the drawer. On a narrow screen it opens over the page from its own launcher |
 
 ## Do and don't
 

@@ -65,8 +65,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (e.key === "Enter") {
       setIsScheduling(false);
     } else if (e.key === "Escape") {
-      // Keep Escape from also closing the copilot popup
-      e.stopPropagation();
       setIsScheduling(false);
     }
   };

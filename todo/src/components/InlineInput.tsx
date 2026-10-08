@@ -31,8 +31,6 @@ export const InlineInput: React.FC<InlineInputProps> = ({
     if (e.key === "Enter" && !e.nativeEvent.isComposing) {
       finish(() => onSubmit(value));
     } else if (e.key === "Escape") {
-      // Keep Escape from also closing the copilot popup
-      e.stopPropagation();
       finish(onCancel);
     }
   };
