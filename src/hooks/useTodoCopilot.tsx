@@ -52,13 +52,13 @@ const updateTodoListParameters = z.object({
           .string()
           .optional()
           .describe(
-            "The date the work starts, as YYYY-MM-DD. Leave it out to keep the current date, pass an empty string to remove it.",
+            "The date the work starts, as YYYY-MM-DD between 1900 and 2099. Leave it out to keep the current date, pass an empty string to remove it.",
           ),
         dueDate: z
           .string()
           .optional()
           .describe(
-            "The date the todo item is due, as YYYY-MM-DD. Leave it out to keep the current date, pass an empty string to remove it.",
+            "The date the todo item is due, as YYYY-MM-DD between 1900 and 2099. Leave it out to keep the current date, pass an empty string to remove it.",
           ),
       }),
     )
@@ -82,13 +82,13 @@ const updateTodoParameters = z.object({
     .string()
     .optional()
     .describe(
-      "The new start date, as YYYY-MM-DD. Pass an empty string to remove it.",
+      "The new start date, as YYYY-MM-DD between 1900 and 2099. Pass an empty string to remove it.",
     ),
   dueDate: z
     .string()
     .optional()
     .describe(
-      "The new due date, as YYYY-MM-DD. Pass an empty string to remove it.",
+      "The new due date, as YYYY-MM-DD between 1900 and 2099. Pass an empty string to remove it.",
     ),
 });
 
@@ -108,7 +108,7 @@ const resolveDate = (value: string | undefined, current: string | undefined) => 
 };
 
 const invalidDateError = (value: string) =>
-  `"${value}" is not a date in the format YYYY-MM-DD.`;
+  `"${value}" is not a date in the format YYYY-MM-DD between 1900 and 2099.`;
 
 // Defined outside the hook, so the suggestions are not reloaded on every render.
 // Together the two sets show one example of everything the copilot can do
