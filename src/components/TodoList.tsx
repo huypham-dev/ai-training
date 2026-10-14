@@ -55,7 +55,7 @@ export const TodoList: React.FC = () => {
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       {todos.length > 0 && (
         <p className="mb-2 text-xs text-ink-muted" aria-live="polite">
-          {activeCount} active · {completedCount} completed
+          {activeCount} left · {completedCount} done
         </p>
       )}
       {todos.length > 0 && (
