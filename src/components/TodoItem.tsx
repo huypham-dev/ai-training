@@ -1,5 +1,5 @@
 import { Todo, TodoChanges } from "@/types/todo";
-import { formatDateRange } from "@/utils/date";
+import { MAX_DATE, MIN_DATE, formatDateRange, isIsoDate } from "@/utils/date";
 import { useState } from "react";
 import { InlineInput } from "./InlineInput";
 
@@ -19,6 +19,8 @@ const actionButtonClassName =
 const pillClassName =
   "rounded-full px-2.5 py-0.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
+type DateField = "startDate" | "dueDate";
+
 const dateInputClassName =
   "ml-2 border rounded-xl px-2 py-1 text-sm text-ink focus:outline-2 focus:outline-offset-2 focus:outline-primary";
 
@@ -33,6 +35,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
+  // The inputs show what was typed, also while it is not a date that can be saved
+  const [draftDates, setDraftDates] = useState({ startDate: "", dueDate: "" });
+  const [dateError, setDateError] = useState<string>();
 
   const saveText = (value: string) => {
     const text = value.trim();
@@ -52,13 +57,36 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     setIsAssigning(false);
   };
 
-  const saveDates = (changes: Pick<TodoChanges, "startDate" | "dueDate">) => {
-    const { startDate, dueDate } = { ...todo, ...changes };
-    // A due date before the start date keeps the previous dates
-    if (startDate && dueDate && dueDate < startDate) {
+  const openScheduling = () => {
+    setDraftDates({
+      startDate: todo.startDate ?? "",
+      dueDate: todo.dueDate ?? "",
+    });
+    setDateError(undefined);
+    setIsScheduling(true);
+  };
+
+  const changeDate = (field: DateField, value: string) => {
+    const startDate = field === "startDate" ? value : draftDates.startDate;
+    const dueDate = field === "dueDate" ? value : draftDates.dueDate;
+    setDraftDates({ startDate, dueDate });
+    const hasInvalidDate =
+      (startDate !== "" && !isIsoDate(startDate)) ||
+      (dueDate !== "" && !isIsoDate(dueDate));
+    // An invalid date is never saved, the task keeps its previous dates
+    if (hasInvalidDate) {
+      setDateError("Pick a date between 1900 and 2099.");
       return;
     }
-    updateTodo(todo.id, changes);
+    if (startDate && dueDate && dueDate < startDate) {
+      setDateError("The due date is before the start date.");
+      return;
+    }
+    setDateError(undefined);
+    updateTodo(todo.id, {
+      startDate: startDate || undefined,
+      dueDate: dueDate || undefined,
+    });
   };
 
   const handleDatesKeyDown = (e: React.KeyboardEvent) => {
@@ -87,12 +115,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         <input
           type="date"
           className={dateInputClassName}
-          value={todo.startDate ?? ""}
-          max={todo.dueDate}
+          value={draftDates.startDate}
+          min={MIN_DATE}
+          max={todo.dueDate ?? MAX_DATE}
+          aria-invalid={dateError !== undefined}
           autoFocus
-          onChange={(e) =>
-            saveDates({ startDate: e.target.value || undefined })
-          }
+          onChange={(e) => changeDate("startDate", e.target.value)}
         />
       </label>
       <label className="flex items-center text-xs text-ink-muted">
@@ -100,18 +128,23 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         <input
           type="date"
           className={dateInputClassName}
-          value={todo.dueDate ?? ""}
-          min={todo.startDate}
-          onChange={(e) =>
-            saveDates({ dueDate: e.target.value || undefined })
-          }
+          value={draftDates.dueDate}
+          min={todo.startDate ?? MIN_DATE}
+          max={MAX_DATE}
+          aria-invalid={dateError !== undefined}
+          onChange={(e) => changeDate("dueDate", e.target.value)}
         />
       </label>
+      {dateError && (
+        <p role="alert" className="w-full text-xs text-danger">
+          {dateError}
+        </p>
+      )}
     </div>
   ) : (
     dateRange && (
       <button
-        onClick={() => setIsScheduling(true)}
+        onClick={openScheduling}
         title="Change dates"
         className={`${pillClassName} flex items-center gap-1 bg-surface-sunken text-ink-muted`}
       >
@@ -282,7 +315,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           </svg>
         </button>
         <button
-          onClick={() => setIsScheduling(true)}
+          onClick={openScheduling}
           aria-label="Set dates"
           title="Set dates"
           className={`${actionButtonClassName} hover:text-ink`}

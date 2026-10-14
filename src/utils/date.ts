@@ -8,8 +8,15 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+// A date picker also accepts years like 275760, which cannot be shown
+export const MIN_DATE = "1900-01-01";
+export const MAX_DATE = "2099-12-31";
+
 export const isIsoDate = (value: string) =>
-  /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+  /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  !Number.isNaN(Date.parse(value)) &&
+  value >= MIN_DATE &&
+  value <= MAX_DATE;
 
 // Today in the time zone of the user, not in UTC
 export const getToday = () => {

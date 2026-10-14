@@ -1,4 +1,5 @@
 import { Todo, TodoChanges } from "@/types/todo";
+import { isIsoDate } from "@/utils/date";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -27,7 +28,16 @@ const loadTodos = (): Todo[] | undefined => {
       return undefined;
     }
     const parsed = storedTodosSchema.safeParse(JSON.parse(stored));
-    return parsed.success ? parsed.data : undefined;
+    if (!parsed.success) {
+      return undefined;
+    }
+    // Older versions saved any date, such as year 275760, so those are dropped
+    return parsed.data.map((todo) => ({
+      ...todo,
+      startDate:
+        todo.startDate && isIsoDate(todo.startDate) ? todo.startDate : undefined,
+      dueDate: todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
+    }));
   } catch {
     return undefined;
   }
