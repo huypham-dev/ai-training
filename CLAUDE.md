@@ -2,11 +2,11 @@
 
 ## Project
 
-A training repo for building AI features. It holds one app, `todo/`: a Next.js todo list with an embedded CopilotKit chat that can read and change the list.
+A training repo for building AI features. It is one app at the repo root: a Next.js todo list with an embedded CopilotKit chat that can read and change the list.
 
 ## Commands
 
-Run from `todo/` with pnpm.
+Run from the repo root with pnpm.
 
 ```bash
 pnpm install
@@ -14,8 +14,8 @@ pnpm dev      # http://localhost:3000
 pnpm build    # also the type check
 ```
 
-- The chat needs `OPENAI_API_KEY` in `todo/.env.local`.
-- Saved conversations need `CPK_INTELLIGENCE_API_KEY` in `todo/.env.local`. Without it the chat still works, but the threads drawer stays empty.
+- The chat needs `OPENAI_API_KEY` in `.env.local`.
+- Saved conversations need `CPK_INTELLIGENCE_API_KEY` in `.env.local`. Without it the chat still works, but the threads drawer stays empty.
 - There are no tests, and ESLint is not set up.
 
 ## Stack
@@ -24,7 +24,7 @@ Next.js 14 (App Router), React 18, TypeScript strict, Tailwind CSS 4 (tokens in 
 
 ## Architecture
 
-All paths are under `todo/src/`.
+All paths are under `src/`.
 
 - Todos live in React state inside `hooks/useTodos.ts`, which also saves them to `localStorage` (key `todos`) and loads them back after mount.
 - `components/TodoList.tsx` creates the store and passes it to `hooks/useTodoCopilot.tsx`, which shares the list with the agent (`useAgentContext`) and registers four frontend tools: `updateTodoList` (upsert many), `updateTodo` (change one), `deleteTodo` and `clearCompletedTodos` (remove all completed).
@@ -58,12 +58,12 @@ All paths are under `todo/src/`.
 
 Check first, then write. If something cannot be checked, say so and do not present it as fact.
 
-- **Library APIs**: before using a library API, confirm it exists in the installed version, from the type definitions in `todo/node_modules/` or an existing use in `todo/src/`. Most examples online are for other versions than the ones in Stack.
+- **Library APIs**: before using a library API, confirm it exists in the installed version, from the type definitions in `node_modules/` or an existing use in `src/`. Most examples online are for other versions than the ones in Stack.
 - **Names and paths**: do not make up file paths, exports, props, env variables, scripts or design tokens. Search for an existing one before creating a new one.
 - **Unclear requests**: if a request can be read in two ways that lead to different code, ask one short question before writing.
 - **Scope**: change only what was asked. Do not add a dependency, a new file type (tests, config, CI) or a refactor without asking first.
-- **Verification**: after a code change, run `pnpm build` in `todo/` and report the real result. If the change was not run in the browser, say that it was not.
+- **Verification**: after a code change, run `pnpm build` and report the real result. If the change was not run in the browser, say that it was not.
 
 ## UI
 
-Before adding or changing UI in `todo/`, read `todo/DESIGN.md` and follow it. If a change introduces a new visual rule or component, update `todo/DESIGN.md` in the same change.
+Before adding or changing UI, read `DESIGN.md` and follow it. If a change introduces a new visual rule or component, update `DESIGN.md` in the same change.
