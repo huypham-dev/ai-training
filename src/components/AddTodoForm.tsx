@@ -23,7 +23,7 @@ export const AddTodoForm: React.FC<AddTodoFormProps> = ({ addTodo }) => {
   return (
     <>
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">My Todos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Today&apos;s Todos</h1>
       </div>
       <form
         id="new-todo-form"
