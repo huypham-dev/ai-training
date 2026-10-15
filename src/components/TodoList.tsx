@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { Todo } from "@/types/todo";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
+import { TodoSearch } from "./TodoSearch";
 import { TodoSuggestions } from "./TodoSuggestions";
 
 // Puts every sub-task right below the task it was broken down from
@@ -34,6 +36,7 @@ const groupByParent = (todos: Todo[]): Todo[] => {
 export const TodoList: React.FC = () => {
   const store = useTodos();
   const { todos, addTodo, updateTodo, deleteTodo } = store;
+  const [search, setSearch] = useState("");
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -45,7 +48,10 @@ export const TodoList: React.FC = () => {
     );
   };
 
-  const groupedTodos = groupByParent(todos);
+  const query = search.trim().toLowerCase();
+  const visibleTodos = groupByParent(todos).filter((todo) =>
+    todo.text.toLowerCase().includes(query),
+  );
   const completedCount = todos.filter((todo) => todo.isCompleted).length;
   const activeCount = todos.length - completedCount;
 
@@ -53,14 +59,21 @@ export const TodoList: React.FC = () => {
     <div>
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
+      <TodoSearch value={search} onChange={setSearch} />
       {todos.length > 0 && (
         <p className="mb-2 text-xs text-ink-muted" aria-live="polite">
           {activeCount} left · {completedCount} done · {todos.length} total
         </p>
       )}
-      {todos.length > 0 && (
+      {/* Kept mounted so screen readers announce the text when it appears */}
+      <p className="text-sm text-ink-muted empty:hidden" aria-live="polite">
+        {query !== "" &&
+          visibleTodos.length === 0 &&
+          `No todos match "${search.trim()}"`}
+      </p>
+      {visibleTodos.length > 0 && (
         <div className="flex flex-col gap-3">
-          {groupedTodos.map((todo) => (
+          {visibleTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
