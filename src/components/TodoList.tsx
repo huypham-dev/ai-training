@@ -33,32 +33,18 @@ const groupByParent = (todos: Todo[]): Todo[] => {
   return [...grouped, ...todos.filter((todo) => !visited.has(todo.id))];
 };
 
-// Keeps a matching task together with the tasks above it and all of its sub-tasks
-const filterWithFamily = (
+// Keeps the tasks above a matching sub-task, so it never shows without its parent
+const filterWithAncestors = (
   todos: Todo[],
   isMatch: (todo: Todo) => boolean,
 ): Todo[] => {
   const byId = new Map(todos.map((todo) => [todo.id, todo]));
-  const ancestorsOf = (todo: Todo): Todo[] => {
-    const ancestors: Todo[] = [];
-    const seen = new Set([todo.id]);
-    let parent = todo.parentId ? byId.get(todo.parentId) : undefined;
-    while (parent && !seen.has(parent.id)) {
-      ancestors.push(parent);
-      seen.add(parent.id);
-      parent = parent.parentId ? byId.get(parent.parentId) : undefined;
-    }
-    return ancestors;
-  };
-
   const visibleIds = new Set<string>();
-  for (const todo of todos) {
-    const ancestors = ancestorsOf(todo);
-    if (isMatch(todo)) {
-      visibleIds.add(todo.id);
-      ancestors.forEach((ancestor) => visibleIds.add(ancestor.id));
-    } else if (ancestors.some(isMatch)) {
-      visibleIds.add(todo.id);
+  for (const todo of todos.filter(isMatch)) {
+    let current: Todo | undefined = todo;
+    while (current && !visibleIds.has(current.id)) {
+      visibleIds.add(current.id);
+      current = current.parentId ? byId.get(current.parentId) : undefined;
     }
   }
   return todos.filter((todo) => visibleIds.has(todo.id));
@@ -68,10 +54,6 @@ export const TodoList: React.FC = () => {
   const store = useTodos();
   const { todos, addTodo, updateTodo, deleteTodo } = store;
   const [search, setSearch] = useState("");
-  // The tasks that existed when the search started; newer ones stay visible
-  const [searchStartIds, setSearchStartIds] = useState<Set<string> | null>(
-    null,
-  );
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -83,22 +65,14 @@ export const TodoList: React.FC = () => {
     );
   };
 
-  const changeSearch = (value: string) => {
-    if (value.trim() === "") {
-      setSearchStartIds(null);
-    } else if (searchStartIds === null) {
-      setSearchStartIds(new Set(todos.map((todo) => todo.id)));
-    }
-    setSearch(value);
-  };
-
   const query = search.trim().toLowerCase();
-  const visibleTodos = filterWithFamily(
-    groupByParent(todos),
-    (todo) =>
-      todo.text.toLowerCase().includes(query) ||
-      (searchStartIds !== null && !searchStartIds.has(todo.id)),
-  );
+  const groupedTodos = groupByParent(todos);
+  const visibleTodos =
+    query === ""
+      ? groupedTodos
+      : filterWithAncestors(groupedTodos, (todo) =>
+          todo.text.toLowerCase().includes(query),
+        );
   const completedCount = todos.filter((todo) => todo.isCompleted).length;
   const activeCount = todos.length - completedCount;
 
@@ -106,7 +80,7 @@ export const TodoList: React.FC = () => {
     <div>
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
-      <TodoSearch value={search} onChange={changeSearch} />
+      <TodoSearch value={search} onChange={setSearch} />
       {todos.length > 0 && (
         <p className="mb-2 text-xs text-ink-muted" aria-live="polite">
           {activeCount} left · {completedCount} done · {todos.length} total
