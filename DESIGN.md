@@ -28,7 +28,7 @@ Tokens are defined in the `@theme` block of `src/app/globals.css` and used as Ta
 | Border | `line` | `#E2E8F0` | All default borders, dot of a completed task |
 | Surface | `surface` | `#FFFFFF` | Page, cards, inputs, chat input bar |
 | Surface muted | `surface-muted` | `#F8FAFC` | Copilot bubble, resting chat input |
-| Surface sunken | `surface-sunken` | `#F1F5F9` | New task bar, date pill |
+| Surface sunken | `surface-sunken` | `#F1F5F9` | New task bar, search bar, date pill |
 | Danger | `danger` | `#D92D20` | Delete button, error card |
 
 `primary` and `secondary` are Aurora UI colors. The `-strong` variants are darker shades added for this app, because white text on `#0080FF`, magenta text on white and amber text on its own tint do not reach WCAG AA.
@@ -113,8 +113,10 @@ Heroicons, outline style, as inline SVG with `strokeWidth={1.5}` and `stroke="cu
 | Page header | `components/AddTodoForm.tsx` | The H1 on the left and the primary button on the right, `mb-6 flex items-center justify-between` |
 | Primary button | `components/AddTodoForm.tsx` | "New todo" with a plus icon: `rounded-xl bg-ink px-4 py-3 font-semibold text-white`. It submits the new task bar, and with an empty bar it moves the focus there |
 | New task bar | `components/AddTodoForm.tsx` | `rounded-xl bg-surface-sunken px-4 py-3`, no border. A muted clipboard icon, then a transparent input with a placeholder and an `aria-label`. The focus ring is on the bar (`focus-within:`). Enter adds the task |
+| Search bar | `components/TodoSearch.tsx` | Same look as the new task bar, with a muted magnifying-glass icon and a `type="search"` input with the placeholder "Search todos". Sits above the task counts with `mb-6` and is always shown. It filters the task cards by title as you type; the search text is not saved. A matching sub-task is shown with the tasks above it, so it never shows without its parent. Sub-tasks of a matching task are shown only when they match too. Tasks added or changed while the search has text, from the new task bar or by the copilot, are shown only when they match |
+| No-match state | `components/TodoList.tsx` | `text-sm text-ink-muted` line in place of the task cards, such as `No todos match "xyz"`, shown when the search has text and no task matches |
 | Inline input | `components/InlineInput.tsx` | `rounded-xl border px-2 py-1 text-sm` |
-| Task counts | `components/TodoList.tsx` | Caption right above the task cards with `mb-2`, such as "3 active · 2 completed". Sub-tasks are counted too. Hidden when there are no tasks |
+| Task counts | `components/TodoList.tsx` | Caption right above the task cards with `mb-2`, such as "3 active · 2 completed". Sub-tasks are counted too. Always counts the whole list, also while a search hides some tasks. Hidden when there are no tasks |
 | Task card | `components/TodoItem.tsx` | `rounded-xl border bg-surface p-4 shadow-card`, one per task, in `flex flex-col gap-3`. From the left: a status dot (`h-2 w-2 rounded-full`, `bg-accent` when open, `bg-line` when completed), the checkbox, then the task title with the pills under it, and the actions on the right. The actions wrap below the text on a narrow screen. A sub-task sits right below its parent with `ml-8` and a muted arrow-turn-down-right icon before the dot |
 | Card actions | `components/TodoItem.tsx` | In `ml-auto flex items-center gap-2`: the copilot action pill, then the icon buttons edit, dates, assign and delete |
 | Copilot action pill | `components/TodoItem.tsx` | "Break down" with the sparkles icon: `rounded-full bg-accent/20 px-3 py-1 text-accent-strong`, hover `bg-accent/30`. Only on a task that is not a sub-task |
