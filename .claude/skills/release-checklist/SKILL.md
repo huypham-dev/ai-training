@@ -63,7 +63,6 @@ gh api repos/huypham-dev/ai-training/commits/<release branch head sha>/status
 ```
 
 - `Vercel – huypham-dev-ai-training` must be `success`.
-- `Vercel – ai-training-todo` also fails on the base branch, so report its state but do not count it as a failure.
 
 ### 5. Docs match the code
 

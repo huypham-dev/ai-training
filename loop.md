@@ -13,10 +13,8 @@ Started with `/loop 5m check the deploy, following loop.md`. Watches the Vercel 
 1. Find the open PR for the current branch: `gh pr view --repo huypham-dev/ai-training --json number,state,headRefOid`.
 2. Read the commit statuses of the PR head:
    `gh api repos/huypham-dev/ai-training/commits/<head sha>/status`
-   There are two Vercel projects:
-   - `Vercel – huypham-dev-ai-training`: the deploy of this app. It must succeed.
-   - `Vercel – ai-training-todo`: fails on the base branch `feat/todo-app` too, so a failure there is not caused by the PR. Report it, but do not try to fix it.
-3. Compare with the base branch head (`github/feat/todo-app`). A project that fails on the PR but succeeds on the base is a failure caused by the PR.
+   The only Vercel project is `Vercel – huypham-dev-ai-training`, the deploy of this app. It must succeed.
+3. Compare with the base branch head (`github/feat/todo-app`). A deploy that fails on the PR but succeeds on the base is a failure caused by the PR.
 4. When a deploy caused by the PR fails, run `pnpm build` on the branch. If the build fails locally, report the error. The deploy logs need a logged-in Vercel CLI (`npx vercel inspect <deployment id> --logs`), so ask the user for them instead of running it.
 
 The loop only reads. It does not commit, push, redeploy or change Vercel settings.
@@ -31,9 +29,9 @@ Delete the cron job (`CronDelete`) and say why when any of these hold:
 
 ### How to report
 
-- **Nothing changed since the last run**: one line, such as `Deploy unchanged on 8258f14: app ok, ai-training-todo failing (also on base).`
-- **Something changed** (a new commit, a status that flipped, a new failure): a short table with one row per Vercel project, showing its state on the PR head and on the base, followed by one line on what changed.
-- **The loop stops**: one line with the reason and the last state of both projects.
+- **Nothing changed since the last run**: one line, such as `Deploy unchanged on 8258f14: app ok.`
+- **Something changed** (a new commit, a status that flipped, a new failure): a short table showing the deploy state on the PR head and on the base, followed by one line on what changed.
+- **The loop stops**: one line with the reason and the last deploy state.
 
 Replies to the user are in Vietnamese. Commands, statuses and file names stay as they are.
 
