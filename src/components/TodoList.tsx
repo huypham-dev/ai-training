@@ -52,7 +52,7 @@ const filterWithAncestors = (
 
 export const TodoList: React.FC = () => {
   const store = useTodos();
-  const { todos, addTodo, updateTodo, deleteTodo } = store;
+  const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
 
   useTodoCopilot(store);
@@ -82,9 +82,20 @@ export const TodoList: React.FC = () => {
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
       {todos.length > 0 && (
-        <p className="mb-2 text-xs text-ink-muted" aria-live="polite">
-          {activeCount} left · {completedCount} done · {todos.length} total
-        </p>
+        <div className="mb-2 flex items-center gap-3">
+          <p className="text-xs text-ink-muted" aria-live="polite">
+            {activeCount} left · {completedCount} done · {todos.length} total
+          </p>
+          {completedCount > 0 && (
+            <button
+              type="button"
+              onClick={clearCompletedTodos}
+              className="rounded-sm text-xs font-medium text-ink-muted transition duration-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Clear completed
+            </button>
+          )}
+        </div>
       )}
       {/* Kept mounted so screen readers announce the text when it appears */}
       <p className="text-sm text-ink-muted empty:hidden" aria-live="polite">
