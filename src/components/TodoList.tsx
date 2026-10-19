@@ -8,6 +8,7 @@ import { Todo } from "@/types/todo";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
+import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
 
 // Puts every sub-task right below the task it was broken down from
@@ -54,6 +55,7 @@ export const TodoList: React.FC = () => {
   const store = useTodos();
   const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<TodoStatus>("all");
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -67,12 +69,20 @@ export const TodoList: React.FC = () => {
 
   const query = search.trim().toLowerCase();
   const groupedTodos = groupByParent(todos);
-  const visibleTodos =
+  const isFiltered = query !== "" || status !== "all";
+  const visibleTodos = isFiltered
+    ? filterWithAncestors(
+        groupedTodos,
+        (todo) =>
+          todo.text.toLowerCase().includes(query) &&
+          (status === "all" || todo.isCompleted === (status === "done")),
+      )
+    : groupedTodos;
+  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
+  const emptyMessage =
     query === ""
-      ? groupedTodos
-      : filterWithAncestors(groupedTodos, (todo) =>
-          todo.text.toLowerCase().includes(query),
-        );
+      ? `No ${statusLabel}todos`
+      : `No ${statusLabel}todos match "${search.trim()}"`;
   const completedCount = todos.filter((todo) => todo.isCompleted).length;
   const activeCount = todos.length - completedCount;
 
@@ -81,6 +91,7 @@ export const TodoList: React.FC = () => {
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
+      <TodoStatusFilter value={status} onChange={setStatus} />
       {todos.length > 0 && (
         <div className="mb-2 flex items-center gap-3">
           <p className="text-xs text-ink-muted" aria-live="polite">
@@ -99,9 +110,7 @@ export const TodoList: React.FC = () => {
       )}
       {/* Kept mounted so screen readers announce the text when it appears */}
       <p className="text-sm text-ink-muted empty:hidden" aria-live="polite">
-        {query !== "" &&
-          visibleTodos.length === 0 &&
-          `No todos match "${search.trim()}"`}
+        {isFiltered && visibleTodos.length === 0 && emptyMessage}
       </p>
       {visibleTodos.length > 0 && (
         <div className="flex flex-col gap-3">
