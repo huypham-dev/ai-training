@@ -16,7 +16,7 @@ pnpm build    # also the type check
 
 - The chat needs `OPENAI_API_KEY` in `.env.local`.
 - Saved conversations need `CPK_INTELLIGENCE_API_KEY` in `.env.local`. Without it the chat still works, but the threads drawer stays empty.
-- There are no tests, and ESLint is not set up.
+- There are no tests, and ESLint is not set up. Prettier is installed with its default config.
 
 ## Stack
 
@@ -39,6 +39,14 @@ All paths are under `src/`.
 - Every store change goes through `commit` in `useTodos`, which keeps the ref, the state and `localStorage` in sync. Add new mutations the same way.
 - Tool handlers return an explicit result string or object. Without one the model tends to call the tool again.
 - The webpack block in `next.config.mjs` stubs `node:` imports that CopilotKit telemetry pulls into the client bundle. Keep it.
+
+## Claude Code hooks
+
+Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
+
+- `format-on-edit.sh` (PostToolUse): runs Prettier on a `.ts`, `.tsx`, `.js`, `.json` or `.css` file after Claude edits it. Markdown is skipped so the tables in `DESIGN.md` keep their layout.
+- `block-forbidden-command.sh` (PreToolUse, Bash): blocks a force push to `main` and `rm -rf` on `/`, `~`, `$HOME`, `.`, `..`, `*` or a top-level folder.
+- `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
 
 ## Code conventions
 
