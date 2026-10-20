@@ -1,7 +1,7 @@
 ---
 description: Write my daily standup from my own commits and PRs in this repo
 argument-hint: "[since, default yesterday]"
-allowed-tools: Bash(git log:*), Bash(git branch:*), Bash(git status:*), Bash(gh pr list:*)
+allowed-tools: Bash(git log:*), Bash(git branch:*), Bash(git status:*), mcp__github__search_pull_requests
 ---
 
 # Standup
@@ -13,10 +13,10 @@ Period: since `$ARGUMENTS`, or since `yesterday` if empty. On a Monday with no a
 ## Gather
 
 - My commits on all branches: `git log --all --no-merges --author="$(git config user.name)" --since="<period>" --format="%h %ad %s" --date=short`
-- My open PRs: `gh pr list --repo huypham-dev/ai-training --author @me --state open`
+- My open PRs: the GitHub MCP tool `mcp__github__search_pull_requests` with `owner: huypham-dev`, `repo: ai-training`, `query: "is:open author:@me"`.
 - Uncommitted work: `git status --short` and the current branch.
 
-If `gh` fails, skip the PR part and say so in one line.
+If the MCP call fails, skip the PR part and say so in one line.
 
 ## Write
 

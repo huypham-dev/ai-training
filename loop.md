@@ -10,10 +10,10 @@ Started with `/loop 5m check the deploy, following loop.md`. Watches the Vercel 
 
 ### Each run
 
-1. Find the open PR for the current branch: `gh pr view --repo huypham-dev/ai-training --json number,state,headRefOid`.
-2. Read the commit statuses of the PR head:
-   `gh api repos/huypham-dev/ai-training/commits/<head sha>/status`
-   The only Vercel project is `Vercel – huypham-dev-ai-training`, the deploy of this app. It must succeed.
+1. Find the open PR for the current branch with the GitHub MCP tool `mcp__github__list_pull_requests` (`owner: huypham-dev`, `repo: ai-training`, `head: huypham-dev:<current branch>`, `state: open`). Note its `number` and `head.sha`.
+2. Read the combined commit status of the PR head with `mcp__github__pull_request_read` (`method: get_status`, `owner: huypham-dev`, `repo: ai-training`, `pullNumber: <number>`).
+   The only Vercel project is `huypham-dev-ai-training`, the deploy of this app. Its status has the context `Vercel` and a `target_url` under `vercel.com/.../huypham-dev-ai-training`. It must succeed.
+   If an MCP call fails, report the deploy as **not checked** with the error and do not fall back to another tool.
 3. Compare with the base branch head (`github/feat/todo-app`). A deploy that fails on the PR but succeeds on the base is a failure caused by the PR.
 4. When a deploy caused by the PR fails, run `pnpm build` on the branch. If the build fails locally, report the error. The deploy logs need a logged-in Vercel CLI (`npx vercel inspect <deployment id> --logs`), so ask the user for them instead of running it.
 

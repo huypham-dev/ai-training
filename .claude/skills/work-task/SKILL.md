@@ -15,8 +15,8 @@ The input is a GitHub issue link or the ticket text pasted as is. If it starts w
 
 - Base branch and PR target: `feat/todo-app`.
 - Git remote for pushing: `github` (`huypham-dev/ai-training` on GitHub). Never push to `origin`.
-- PRs are made with the `gh` CLI. If `gh` is missing or `gh auth status` fails, stop before step 1 and tell the user how to install or log in. Do not fall back to another tool.
-- All rules in `CLAUDE.md` apply, and `DESIGN.md` applies to any UI change. Read them in step 2 instead of relying on memory. Where `CLAUDE.md` says the remote is GitLab and `gh` does not work, this skill overrides it: this flow targets GitHub.
+- GitHub is read and written through the GitHub MCP server `github` (tools `mcp__github__*`). Before step 1, call `mcp__github__get_me`. If the tools are missing or the call fails, stop and tell the user to check the server with `claude mcp get github`. Do not fall back to another tool.
+- All rules in `CLAUDE.md` apply, and `DESIGN.md` applies to any UI change. Read them in step 2 instead of relying on memory. Where `CLAUDE.md` says the remote is GitLab, this skill overrides it: this flow targets GitHub.
 
 Keep the task list updated with one item per step below.
 
@@ -24,7 +24,7 @@ Keep the task list updated with one item per step below.
 
 ### 1. Read the ticket
 
-- Link: read it with `gh issue view <link> --comments`.
+- Link: take owner, repo and number from the link, then call `mcp__github__issue_read` with `method: get` and again with `method: get_comments`.
 - Text: use it as given.
 
 Write a short summary: goal, acceptance criteria, what is out of scope. Keep the issue number if there is one.
@@ -86,8 +86,9 @@ Wait for the user's OK.
 git add <changed files>
 git commit    # subject `<type>: <summary>`, plus the attribution lines from the session
 git push -u github <branch>
-gh pr create --draft --repo huypham-dev/ai-training --base feat/todo-app --head <branch> --title "<type>: <summary>" --body-file <file>
 ```
+
+Then open the PR with `mcp__github__create_pull_request`: `owner: huypham-dev`, `repo: ai-training`, `base: feat/todo-app`, `head: <branch>`, `draft: true`, `title: "<type>: <summary>"`, `body: <PR body>`.
 
 The PR body has these sections:
 - **Ticket**: the link, or `Closes #<n>` for a GitHub issue.

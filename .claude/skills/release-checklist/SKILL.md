@@ -15,8 +15,8 @@ Input: `$ARGUMENTS`. If empty, the release branch is `feat/todo-app`.
 
 - Remote: `github`. Never read from or push to `origin` for this flow.
 - Release target: `main`.
-- All rules in `CLAUDE.md` apply. Where `CLAUDE.md` says the remote is GitLab and `gh` does not work, this skill overrides it: releases go through GitHub.
-- If `gh auth status` fails, mark the GitHub checks as **not checked** and keep going with the local ones.
+- All rules in `CLAUDE.md` apply. Where `CLAUDE.md` says the remote is GitLab, this skill overrides it: releases go through GitHub.
+- GitHub is read through the GitHub MCP server `github` (tools `mcp__github__*`). Call `mcp__github__get_me` first. If the tools are missing or a call fails, mark the GitHub checks as **not checked** and keep going with the local ones.
 
 Keep the task list updated with one item per section below.
 
@@ -41,9 +41,7 @@ Check out the release branch at `github/<release branch>` in detached HEAD (`git
 
 ### 2. Open work
 
-```bash
-gh pr list --repo huypham-dev/ai-training --base <release branch> --state open
-```
+Call `mcp__github__list_pull_requests` with `owner: huypham-dev`, `repo: ai-training`, `base: <release branch>`, `state: open`.
 
 List open PRs into the release branch. They are not a failure on their own, but the person releasing should know what is left out.
 
@@ -58,11 +56,13 @@ The build is also the type check. Read the real output; a failing build is a **f
 
 ### 4. Deploy preview
 
-```bash
-gh api repos/huypham-dev/ai-training/commits/<release branch head sha>/status
-```
+The MCP server has no tool for the status of a bare commit SHA, so read it through the release PR:
 
-- `Vercel – huypham-dev-ai-training` must be `success`.
+1. Find the open PR from the release branch into `main` with `mcp__github__list_pull_requests` (`owner: huypham-dev`, `repo: ai-training`, `head: huypham-dev:<release branch>`, `base: main`, `state: open`). Its `head.sha` must equal `github/<release branch>`.
+2. Read the status with `mcp__github__pull_request_read` (`method: get_status`, `pullNumber: <number>`).
+
+- The `Vercel` status (its `target_url` points to the `huypham-dev-ai-training` project) must be `success`.
+- No open release PR yet, or its `head.sha` differs: **not checked**, with that reason.
 
 ### 5. Docs match the code
 
@@ -100,8 +100,4 @@ Reply in the user's language. Commands, statuses and file names stay as they are
 1. One line verdict: **Ready**, **Ready with notes** or **Not ready**.
 2. A table: check, result, details.
 3. The open PRs from check 2 and the manual checks from check 7.
-4. If ready, the command the person can run to open the release PR. Do not run it:
-
-```bash
-gh pr create --repo huypham-dev/ai-training --base main --head <release branch> --title "release: <summary>" --body-file <file>
-```
+4. If ready and no release PR is open, the PR the person can open with `mcp__github__create_pull_request`: `owner: huypham-dev`, `repo: ai-training`, `base: main`, `head: <release branch>`, `title: "release: <summary>"`, `body: <summary of the release>`. Suggest it only; do not call it.

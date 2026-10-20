@@ -50,6 +50,7 @@ All paths are under `src/`.
 ## Git
 
 - The remote is GitLab, so changes are reviewed as merge requests. The `gh` CLI does not work here.
+- GitHub (remote `github`, `huypham-dev/ai-training`) is reached through the GitHub MCP server `github` (tools `mcp__github__*`).
 - Branch: `<type>/<short-name>`, like `feat/todo-app`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
 - Commit or push only when asked.
