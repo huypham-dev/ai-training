@@ -1,6 +1,6 @@
 ---
 name: work-task
-description: Implement one ticket end to end in this repo, from the pasted ticket or issue link to a draft GitHub pull request against feat/todo-app. Use when the user runs /work-task or asks to take a ticket all the way to a PR/MR.
+description: Implement one ticket end to end in this repo, from the pasted ticket or issue link to a draft GitHub pull request against main. Use when the user runs /work-task or asks to take a ticket all the way to a PR/MR.
 argument-hint: "[--auto] <issue link or pasted ticket text>"
 disable-model-invocation: true
 ---
@@ -13,7 +13,7 @@ The input is a GitHub issue link or the ticket text pasted as is. If it starts w
 
 ## Fixed settings
 
-- Base branch and PR target: `feat/todo-app`.
+- Base branch and PR target: `main`.
 - Git remote for pushing: `github` (`huypham-dev/ai-training` on GitHub). Never push to `origin`.
 - PRs are made with the `gh` CLI. If `gh` is missing or `gh auth status` fails, stop before step 1 and tell the user how to install or log in. Do not fall back to another tool.
 - All rules in `CLAUDE.md` apply, and `DESIGN.md` applies to any UI change. Read them in step 2 instead of relying on memory. Where `CLAUDE.md` says the remote is GitLab and `gh` does not work, this skill overrides it: this flow targets GitHub.
@@ -47,8 +47,8 @@ With `--auto`, continue without waiting, but still stop and ask when any of thes
 ### 4. Create the branch
 
 ```bash
-git fetch github feat/todo-app
-git switch -c <type>/<short-name> github/feat/todo-app
+git fetch github main
+git switch -c <type>/<short-name> github/main
 ```
 
 `<type>` comes from the ticket (`feat`, `fix`, `chore`, `docs`, `refactor`). If the working tree is not clean, stop and ask before switching.
@@ -86,7 +86,7 @@ Wait for the user's OK.
 git add <changed files>
 git commit    # subject `<type>: <summary>`, plus the attribution lines from the session
 git push -u github <branch>
-gh pr create --draft --repo huypham-dev/ai-training --base feat/todo-app --head <branch> --title "<type>: <summary>" --body-file <file>
+gh pr create --draft --repo huypham-dev/ai-training --base main --head <branch> --title "<type>: <summary>" --body-file <file>
 ```
 
 The PR body has these sections:
