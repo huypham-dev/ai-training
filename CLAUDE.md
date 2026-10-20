@@ -57,7 +57,8 @@ Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 
 ## Git
 
-- The remote is GitLab, so changes are reviewed as merge requests. The `gh` CLI does not work here.
+- The `origin` remote is GitLab, so changes there are reviewed as merge requests.
+- GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `feat/todo-app`.
 - Branch: `<type>/<short-name>`, like `feat/todo-app`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
 - Commit or push only when asked.
