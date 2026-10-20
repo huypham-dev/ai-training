@@ -45,7 +45,7 @@ All paths are under `src/`.
 Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 
 - `format-on-edit.sh` (PostToolUse): runs Prettier on a `.ts`, `.tsx`, `.js`, `.json` or `.css` file after Claude edits it. Markdown is skipped so the tables in `DESIGN.md` keep their layout.
-- `block-forbidden-command.sh` (PreToolUse, Bash): blocks a force push to `main` and `rm -rf` on `/`, `~`, `$HOME`, `.`, `..`, `*` or a top-level folder.
+- `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
 - `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
 
 ## Code conventions

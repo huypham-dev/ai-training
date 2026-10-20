@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse (Bash): block force pushes to main and rm -rf on broad targets.
+# PreToolUse (Bash): block any git push to main. Changes reach main through a PR.
 # Exit 2 blocks the command and shows stderr to Claude.
 set -u
 set -f
@@ -15,7 +15,7 @@ block() {
 current_branch=$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null)
 
 check_git_push() {
-  local force=false seen_push=false word dest
+  local seen_push=false word dest
   local positionals=()
   for word in "$@"; do
     if ! $seen_push; then
@@ -23,9 +23,7 @@ check_git_push() {
       continue
     fi
     case "$word" in
-      --force | --force-with-lease* | --force-if-includes | --mirror) force=true ;;
-      --*) ;;
-      -*f*) force=true ;;
+      --all | --branches | --mirror) block "pushing all branches includes main. Push a feature branch and open a PR." ;;
       -*) ;;
       *) positionals+=("$word") ;;
     esac
@@ -35,57 +33,20 @@ check_git_push() {
   # The first positional is the remote, the rest are refspecs
   local refspecs=("${positionals[@]:1}")
   if [ "${#refspecs[@]}" -eq 0 ]; then
-    $force && [ "$current_branch" = "main" ] && block "force push to main is not allowed. Push to a feature branch and open a PR."
+    [ "$current_branch" = "main" ] && block "pushing to main is not allowed. Push a feature branch and open a PR."
     return 0
   fi
-  for word in "${refspecs[@]}"; do
-    [[ "$word" == +* ]] && force=true
-  done
-  $force || return 0
   for word in "${refspecs[@]}"; do
     word=${word#+}
     dest=${word##*:}
     dest=${dest#refs/heads/}
     if [ "$dest" = "main" ] || { [ "$dest" = "HEAD" ] && [ "$current_branch" = "main" ]; }; then
-      block "force push to main is not allowed. Push to a feature branch and open a PR."
+      block "pushing to main is not allowed. Push a feature branch and open a PR."
     fi
   done
 }
 
-check_rm() {
-  local recursive=false forced=false word target
-  local targets=()
-  for word in "$@"; do
-    case "$word" in
-      --recursive) recursive=true ;;
-      --force) forced=true ;;
-      --*) ;;
-      -*)
-        [[ "$word" == *[rR]* ]] && recursive=true
-        [[ "$word" == *f* ]] && forced=true
-        ;;
-      *) targets+=("$word") ;;
-    esac
-  done
-  $recursive && $forced || return 0
-
-  for word in "${targets[@]+"${targets[@]}"}"; do
-    target=${word//\"/}
-    target=${target//\'/}
-    target=${target%/}
-    case "$target" in
-      "" | / | /\* | \~ | \~/\* | \$HOME | \$HOME/\* | \$\{HOME\} | \$\{HOME\}/\* | . | ./\* | .. | ../\* | \* | .\* | "$HOME" | "$HOME"/\*)
-        block "rm -rf on '$word' is too broad. Remove specific paths instead."
-        ;;
-    esac
-    # Top-level folders like /usr or /Users
-    if [[ "$target" =~ ^/[^/]+$ ]]; then
-      block "rm -rf on '$word' is too broad. Remove specific paths instead."
-    fi
-  done
-}
-
-# Check each simple command on its own, so `cd x && git push -f` is still caught
+# Check each simple command on its own, so `cd x && git push origin main` is still caught
 segments=$(printf '%s\n' "$cmd" | sed -E 's/(&&|\|\||;|\|)/\n/g')
 
 while IFS= read -r segment; do
@@ -99,12 +60,8 @@ while IFS= read -r segment; do
     esac
   done
   [ "$i" -lt "${#words[@]}" ] || continue
-  args=("${words[@]:$i}")
 
-  case "${args[0]}" in
-    git) check_git_push "${args[@]:1}" ;;
-    rm) check_rm "${args[@]:1}" ;;
-  esac
+  [ "${words[$i]}" = "git" ] && check_git_push "${words[@]:$((i + 1))}"
 done <<<"$segments"
 
 exit 0
