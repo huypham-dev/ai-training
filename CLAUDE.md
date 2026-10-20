@@ -16,7 +16,7 @@ pnpm build    # also the type check
 
 - The chat needs `OPENAI_API_KEY` in `.env.local`.
 - Saved conversations need `CPK_INTELLIGENCE_API_KEY` in `.env.local`. Without it the chat still works, but the threads drawer stays empty.
-- There are no tests, and ESLint is not set up.
+- There are no tests, and ESLint is not set up. Prettier is installed with its default config.
 
 ## Stack
 
@@ -40,6 +40,14 @@ All paths are under `src/`.
 - Tool handlers return an explicit result string or object. Without one the model tends to call the tool again.
 - The webpack block in `next.config.mjs` stubs `node:` imports that CopilotKit telemetry pulls into the client bundle. Keep it.
 
+## Claude Code hooks
+
+Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
+
+- `format-on-edit.sh` (PostToolUse): runs Prettier on a `.ts`, `.tsx`, `.js`, `.json` or `.css` file after Claude edits it. Markdown is skipped so the tables in `DESIGN.md` keep their layout.
+- `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
+- `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
+
 ## Code conventions
 
 - **Components**: one per file, file name in PascalCase, named export, written as `export const Name: React.FC<NameProps> = (...) => {}`, with `interface NameProps` directly above.
@@ -49,7 +57,8 @@ All paths are under `src/`.
 
 ## Git
 
-- The remote is GitLab, so changes are reviewed as merge requests. The `gh` CLI does not work here.
+- The `origin` remote is GitLab, so changes there are reviewed as merge requests.
+- GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `feat/todo-app`.
 - Branch: `<type>/<short-name>`, like `feat/todo-app`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
 - Commit or push only when asked.
