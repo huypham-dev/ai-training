@@ -48,6 +48,13 @@ Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 - `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
 - `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
 
+## MCP servers
+
+Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
+
+- `github` reads the token from the `GITHUB_PERSONAL_ACCESS_TOKEN` environment variable. Set it in your own shell profile before starting Claude Code. Never put the token in `.mcp.json` or commit it.
+- Claude Code asks you to approve the project servers the first time. Check them with `/mcp`, not `claude mcp get`, which prints header values in plain text.
+
 ## Code conventions
 
 - **Components**: one per file, file name in PascalCase, named export, written as `export const Name: React.FC<NameProps> = (...) => {}`, with `interface NameProps` directly above.
@@ -59,7 +66,7 @@ Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 
 - The `origin` remote is GitLab, so changes there are reviewed as merge requests.
 - GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `main`, the default branch.
-- Branch: `<type>/<short-name>`, like `feat/search-todos`.
+- Branch: `<type>/<short-name>`, like `feat/mcp-config` or `fix/border-button`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
 - Commit or push only when asked.
 
