@@ -1,15 +1,15 @@
 ---
 name: release-checklist
 description: Check that a branch is ready to merge into main and report a pass/fail checklist. Use when the user runs /release-checklist or asks whether the app is ready to release, ship or merge to main.
-argument-hint: "[branch, default the current branch]"
+argument-hint: "[branch to release, default the current branch]"
 disable-model-invocation: true
 ---
 
 # Release checklist
 
-A release merges a branch into `main` on GitHub (`huypham-dev/ai-training`). This skill only checks and reports. It does not merge, push, tag or change Vercel settings; the person running it decides.
+A release merges a branch into `main`, the default branch, on GitHub (`huypham-dev/ai-training`). This skill only checks and reports. It does not merge, push, tag or change Vercel settings; the person running it decides.
 
-Input: `$ARGUMENTS`. If empty, the release branch is the current branch (`git branch --show-current`).
+Input: `$ARGUMENTS`. If empty, the release branch is the current branch. If that is `main`, stop and ask which branch to release.
 
 ## Fixed settings
 
@@ -42,10 +42,10 @@ Check out the release branch at `github/<release branch>` in detached HEAD (`git
 ### 2. Open work
 
 ```bash
-gh pr list --repo huypham-dev/ai-training --base <release branch> --state open
+gh pr list --repo huypham-dev/ai-training --base main --head <release branch> --state open
 ```
 
-List open PRs into the release branch. They are not a failure on their own, but the person releasing should know what is left out.
+Report an open PR from the release branch into `main` if there is one. It is not a failure; the report then points to that PR instead of a new one.
 
 ### 3. Build
 
@@ -100,7 +100,7 @@ Reply in the user's language. Commands, statuses and file names stay as they are
 1. One line verdict: **Ready**, **Ready with notes** or **Not ready**.
 2. A table: check, result, details.
 3. The open PRs from check 2 and the manual checks from check 7.
-4. If ready, the command the person can run to open the release PR. Do not run it:
+4. If ready and check 2 found no PR, the command the person can run to open the release PR. Do not run it:
 
 ```bash
 gh pr create --repo huypham-dev/ai-training --base main --head <release branch> --title "release: <summary>" --body-file <file>
