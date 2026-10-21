@@ -48,6 +48,13 @@ Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 - `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
 - `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
 
+## MCP servers
+
+Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
+
+- `github` reads the token from the `GITHUB_PERSONAL_ACCESS_TOKEN` environment variable. Set it in your own shell profile before starting Claude Code. Never put the token in `.mcp.json` or commit it.
+- Claude Code asks you to approve the project servers the first time. Check them with `/mcp`, not `claude mcp get`, which prints header values in plain text.
+
 ## Code conventions
 
 - **Components**: one per file, file name in PascalCase, named export, written as `export const Name: React.FC<NameProps> = (...) => {}`, with `interface NameProps` directly above.
