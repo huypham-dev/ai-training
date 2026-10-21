@@ -1,15 +1,15 @@
 ---
 name: release-checklist
-description: Check that feat/todo-app is ready to release to main and report a pass/fail checklist. Use when the user runs /release-checklist or asks whether the app is ready to release, ship or merge to main.
-argument-hint: "[base branch, default feat/todo-app]"
+description: Check that a branch is ready to merge into main and report a pass/fail checklist. Use when the user runs /release-checklist or asks whether the app is ready to release, ship or merge to main.
+argument-hint: "[branch, default the current branch]"
 disable-model-invocation: true
 ---
 
 # Release checklist
 
-A release merges the integration branch into `main` on GitHub (`huypham-dev/ai-training`). This skill only checks and reports. It does not merge, push, tag or change Vercel settings; the person running it decides.
+A release merges a branch into `main` on GitHub (`huypham-dev/ai-training`). This skill only checks and reports. It does not merge, push, tag or change Vercel settings; the person running it decides.
 
-Input: `$ARGUMENTS`. If empty, the release branch is `feat/todo-app`.
+Input: `$ARGUMENTS`. If empty, the release branch is the current branch (`git branch --show-current`).
 
 ## Fixed settings
 

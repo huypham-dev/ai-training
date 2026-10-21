@@ -65,8 +65,8 @@ Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
 ## Git
 
 - The `origin` remote is GitLab, so changes there are reviewed as merge requests.
-- GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `feat/todo-app`.
-- Branch: `<type>/<short-name>`, like `feat/todo-app`.
+- GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `main`.
+- Branch: `<type>/<short-name>`, like `feat/mcp-config`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
 - Commit or push only when asked.
 

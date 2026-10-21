@@ -14,7 +14,7 @@ Started with `/loop 5m check the deploy, following loop.md`. Watches the Vercel 
 2. Read the commit statuses of the PR head:
    `gh api repos/huypham-dev/ai-training/commits/<head sha>/status`
    The only Vercel project is `Vercel – huypham-dev-ai-training`, the deploy of this app. It must succeed.
-3. Compare with the base branch head (`github/feat/todo-app`). A deploy that fails on the PR but succeeds on the base is a failure caused by the PR.
+3. Compare with the base branch head (`github/main`). A deploy that fails on the PR but succeeds on the base is a failure caused by the PR.
 4. When a deploy caused by the PR fails, run `pnpm build` on the branch. If the build fails locally, report the error. The deploy logs need a logged-in Vercel CLI (`npx vercel inspect <deployment id> --logs`), so ask the user for them instead of running it.
 
 The loop only reads. It does not commit, push, redeploy or change Vercel settings.
@@ -39,6 +39,6 @@ Replies to the user are in Vietnamese. Commands, statuses and file names stay as
 
 Started with `/loop 15m` and no prompt. It runs Claude Code's built-in autonomous check on the open PR:
 
-- CI status, unresolved review threads, and whether the branch is behind `feat/todo-app`.
+- CI status, unresolved review threads, and whether the branch is behind `main`.
 - It continues work the user already approved in the session. New work and pushes need the user's OK.
 - When there is nothing to do it reports one line, and after 3 quiet runs only a short CI check.
