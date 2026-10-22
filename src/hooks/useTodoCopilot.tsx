@@ -11,9 +11,14 @@ import {
   TodoUpdateCard,
   TodoUpdateResult,
 } from "@/components/chat/TodoUpdateCard";
+import {
+  TodoShareCard,
+  TodoShareResult,
+} from "@/components/chat/TodoShareCard";
 import { ToolProgress } from "@/components/chat/ToolProgress";
 import { Todo, TodoChanges } from "@/types/todo";
 import { getToday, isIsoDate } from "@/utils/date";
+import { createShareLink } from "@/utils/share";
 import {
   ToolCallStatus,
   useAgentContext,
@@ -98,9 +103,18 @@ const deleteTodoParameters = z.object({
 
 const clearCompletedTodosParameters = z.object({});
 
+const shareTodoListParameters = z.object({
+  from: z
+    .string()
+    .describe("The name to show to the person who opens the link."),
+});
+
 // The model tends to leave a date out when it sends an item again, so only an
 // empty string removes it. A value that is not a date keeps the current one
-const resolveDate = (value: string | undefined, current: string | undefined) => {
+const resolveDate = (
+  value: string | undefined,
+  current: string | undefined,
+) => {
   if (value === undefined || (value !== "" && !isIsoDate(value))) {
     return current;
   }
@@ -150,7 +164,8 @@ const filledListSuggestions = {
     },
     {
       title: "Reword a task",
-      message: "Reword the first open task on my todo list to be more specific.",
+      message:
+        "Reword the first open task on my todo list to be more specific.",
     },
     {
       title: "Assign a task to Alex",
@@ -340,6 +355,33 @@ export const useTodoCopilot = ({
         <TodoClearCard result={result} />
       ) : (
         <ToolProgress label="Clearing completed tasks..." />
+      ),
+  });
+
+  useFrontendTool({
+    name: "shareTodoList",
+    description:
+      "Create a link that opens the user's todo list in another browser.",
+    parameters: shareTodoListParameters,
+    handler: async ({ from }): Promise<TodoShareResult> => {
+      const todos = getTodos();
+      const link = createShareLink(todos, from);
+      if (!link) {
+        return { error: "The list is too long to share as a link." };
+      }
+      return {
+        link,
+        count: todos.length,
+        note:
+          "The link is shown to the user in a card with a copy button. " +
+          "Do not write the link in your reply.",
+      };
+    },
+    render: ({ status, result }) =>
+      status === ToolCallStatus.Complete ? (
+        <TodoShareCard result={result} />
+      ) : (
+        <ToolProgress label="Creating a share link..." />
       ),
   });
 

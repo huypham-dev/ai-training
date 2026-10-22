@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { Todo } from "@/types/todo";
+import { IMPORT_PARAM, IMPORT_SOURCE_PARAM, decodeTodos } from "@/utils/share";
 import { AddTodoForm } from "./AddTodoForm";
+import { ImportBanner } from "./ImportBanner";
+import { ShareListButton } from "./ShareListButton";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
@@ -23,7 +26,9 @@ const groupByParent = (todos: Todo[]): Todo[] => {
     visited.add(todo.id);
     return [
       todo,
-      ...todos.filter((child) => child.parentId === todo.id).flatMap(withSubTasks),
+      ...todos
+        .filter((child) => child.parentId === todo.id)
+        .flatMap(withSubTasks),
     ];
   };
 
@@ -53,9 +58,38 @@ const filterWithAncestors = (
 
 export const TodoList: React.FC = () => {
   const store = useTodos();
-  const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
+  const {
+    todos,
+    addTodo,
+    updateTodo,
+    deleteTodo,
+    upsertTodos,
+    clearCompletedTodos,
+  } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
+  const [imported, setImported] = useState<{ count: number; from: string }>();
+
+  // A shared link carries the list in the URL, so it is merged in after mount
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const encoded = url.searchParams.get(IMPORT_PARAM);
+    if (!encoded) {
+      return;
+    }
+    const from = url.searchParams.get(IMPORT_SOURCE_PARAM)?.trim();
+    // Without this a reload would import the list again over later edits
+    url.searchParams.delete(IMPORT_PARAM);
+    url.searchParams.delete(IMPORT_SOURCE_PARAM);
+    window.history.replaceState(window.history.state, "", url);
+
+    const items = decodeTodos(encoded);
+    if (!items) {
+      return;
+    }
+    upsertTodos(items);
+    setImported({ count: items.length, from: from || "a shared link" });
+  }, [upsertTodos]);
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -78,7 +112,9 @@ export const TodoList: React.FC = () => {
           (status === "all" || todo.isCompleted === (status === "done")),
       )
     : groupedTodos;
-  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
+  const statusLabel = { all: "", active: "active ", done: "completed " }[
+    status
+  ];
   const emptyMessage =
     query === ""
       ? `No ${statusLabel}todos`
@@ -88,6 +124,13 @@ export const TodoList: React.FC = () => {
 
   return (
     <div>
+      {imported && (
+        <ImportBanner
+          count={imported.count}
+          from={imported.from}
+          onDismiss={() => setImported(undefined)}
+        />
+      )}
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
@@ -97,6 +140,7 @@ export const TodoList: React.FC = () => {
           <p className="text-xs text-ink-muted" aria-live="polite">
             {activeCount} left · {completedCount} done · {todos.length} total
           </p>
+          <ShareListButton todos={todos} />
           {completedCount > 0 && (
             <button
               type="button"
@@ -119,7 +163,8 @@ export const TodoList: React.FC = () => {
               key={todo.id}
               todo={todo}
               parent={todos.find(
-                (parent) => parent.id === todo.parentId && parent.id !== todo.id,
+                (parent) =>
+                  parent.id === todo.parentId && parent.id !== todo.id,
               )}
               updateTodo={updateTodo}
               deleteTodo={deleteTodo}

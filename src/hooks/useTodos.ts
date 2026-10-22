@@ -19,6 +19,21 @@ const storedTodosSchema: z.ZodType<Todo[]> = z.array(
   }),
 );
 
+// Checks a list from outside the app, such as storage or a shared link
+export const parseTodos = (value: unknown): Todo[] | undefined => {
+  const parsed = storedTodosSchema.safeParse(value);
+  if (!parsed.success) {
+    return undefined;
+  }
+  // Older versions saved any date, such as year 275760, so those are dropped
+  return parsed.data.map((todo) => ({
+    ...todo,
+    startDate:
+      todo.startDate && isIsoDate(todo.startDate) ? todo.startDate : undefined,
+    dueDate: todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
+  }));
+};
+
 // Storage can be blocked or hold data from an older version, so a list that
 // cannot be read counts as no saved list
 const loadTodos = (): Todo[] | undefined => {
@@ -27,17 +42,7 @@ const loadTodos = (): Todo[] | undefined => {
     if (stored === null) {
       return undefined;
     }
-    const parsed = storedTodosSchema.safeParse(JSON.parse(stored));
-    if (!parsed.success) {
-      return undefined;
-    }
-    // Older versions saved any date, such as year 275760, so those are dropped
-    return parsed.data.map((todo) => ({
-      ...todo,
-      startDate:
-        todo.startDate && isIsoDate(todo.startDate) ? todo.startDate : undefined,
-      dueDate: todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
-    }));
+    return parseTodos(JSON.parse(stored));
   } catch {
     return undefined;
   }
