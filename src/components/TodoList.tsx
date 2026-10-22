@@ -72,17 +72,23 @@ export const TodoList: React.FC = () => {
 
   // A shared link carries the list in the URL, so it is merged in after mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get(IMPORT_PARAM);
+    const url = new URL(window.location.href);
+    const encoded = url.searchParams.get(IMPORT_PARAM);
     if (!encoded) {
       return;
     }
+    const from = url.searchParams.get(IMPORT_SOURCE_PARAM)?.trim();
+    // Without this a reload would import the list again over later edits
+    url.searchParams.delete(IMPORT_PARAM);
+    url.searchParams.delete(IMPORT_SOURCE_PARAM);
+    window.history.replaceState(window.history.state, "", url);
+
     const items = decodeTodos(encoded);
+    if (!items) {
+      return;
+    }
     upsertTodos(items);
-    setImported({
-      count: items.length,
-      from: params.get(IMPORT_SOURCE_PARAM) ?? "a shared link",
-    });
+    setImported({ count: items.length, from: from || "a shared link" });
   }, [upsertTodos]);
 
   useTodoCopilot(store);

@@ -27,7 +27,7 @@ Next.js 14 (App Router), React 18, TypeScript strict, Tailwind CSS 4 (tokens in 
 All paths are under `src/`.
 
 - Todos live in React state inside `hooks/useTodos.ts`, which also saves them to `localStorage` (key `todos`) and loads them back after mount.
-- `components/TodoList.tsx` creates the store and passes it to `hooks/useTodoCopilot.tsx`, which shares the list with the agent (`useAgentContext`) and registers four frontend tools: `updateTodoList` (upsert many), `updateTodo` (change one), `deleteTodo` and `clearCompletedTodos` (remove all completed).
+- `components/TodoList.tsx` creates the store and passes it to `hooks/useTodoCopilot.tsx`, which shares the list with the agent (`useAgentContext`) and registers five frontend tools: `updateTodoList` (upsert many), `updateTodo` (change one), `deleteTodo`, `clearCompletedTodos` (remove all completed) and `shareTodoList` (a link that holds the list, shown in a card).
 - The agent runs on the server in `app/api/copilotkit/[[...slug]]/route.ts`. The tools run in the browser and change the store.
 - Chat threads are saved by CopilotKit Intelligence, which the runtime in that route uses when its key is set. `components/copilot/TodoThreadsDrawer.tsx` lists them, and the `CopilotChatConfigurationProvider` in `components/copilot/CopilotProvider.tsx` shares the active thread between the drawer and the chat. A reload starts a new thread; the earlier ones are opened from the drawer.
 - `components/chat/` holds the custom chat slot components, and `components/copilot/` holds the CopilotKit provider, chat and threads drawer wrappers.

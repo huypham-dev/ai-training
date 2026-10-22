@@ -11,6 +11,10 @@ import {
   TodoUpdateCard,
   TodoUpdateResult,
 } from "@/components/chat/TodoUpdateCard";
+import {
+  TodoShareCard,
+  TodoShareResult,
+} from "@/components/chat/TodoShareCard";
 import { ToolProgress } from "@/components/chat/ToolProgress";
 import { Todo, TodoChanges } from "@/types/todo";
 import { getToday, isIsoDate } from "@/utils/date";
@@ -359,10 +363,26 @@ export const useTodoCopilot = ({
     description:
       "Create a link that opens the user's todo list in another browser.",
     parameters: shareTodoListParameters,
-    handler: async ({ from }) => ({
-      link: createShareLink(todos, from),
-      note: `The link holds ${todos.length} todo item(s). Give it to the user as is.`,
-    }),
+    handler: async ({ from }): Promise<TodoShareResult> => {
+      const todos = getTodos();
+      const link = createShareLink(todos, from);
+      if (!link) {
+        return { error: "The list is too long to share as a link." };
+      }
+      return {
+        link,
+        count: todos.length,
+        note:
+          "The link is shown to the user in a card with a copy button. " +
+          "Do not write the link in your reply.",
+      };
+    },
+    render: ({ status, result }) =>
+      status === ToolCallStatus.Complete ? (
+        <TodoShareCard result={result} />
+      ) : (
+        <ToolProgress label="Creating a share link..." />
+      ),
   });
 
   // This tool has no handler: the run waits for the user to answer in the

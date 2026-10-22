@@ -1,5 +1,11 @@
 import { Todo, TodoChanges } from "@/types/todo";
-import { MAX_DATE, MIN_DATE, formatDateRange, isIsoDate } from "@/utils/date";
+import {
+  MAX_DATE,
+  MIN_DATE,
+  formatDateRange,
+  getToday,
+  isIsoDate,
+} from "@/utils/date";
 import { useState } from "react";
 import { InlineInput } from "./InlineInput";
 
@@ -99,8 +105,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const dateRange = formatDateRange(todo.startDate, todo.dueDate);
   const isOverdue =
+    !todo.isCompleted &&
     todo.dueDate !== undefined &&
-    todo.dueDate < new Date().toISOString().slice(0, 10);
+    todo.dueDate < getToday();
 
   const dates = isScheduling ? (
     <div

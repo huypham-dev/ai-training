@@ -14,11 +14,10 @@ export const ImportBanner: React.FC<ImportBannerProps> = ({
       role="status"
       className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-surface-sunken px-4 py-3 text-sm text-ink"
     >
-      <p
-        dangerouslySetInnerHTML={{
-          __html: `Imported ${count} task(s) from <strong>${from}</strong>.`,
-        }}
-      />
+      <p className="min-w-0 break-words">
+        Imported {count === 1 ? "1 task" : `${count} tasks`} from{" "}
+        <strong>{from}</strong>.
+      </p>
       <button
         type="button"
         onClick={onDismiss}
