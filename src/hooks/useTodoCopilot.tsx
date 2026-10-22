@@ -14,6 +14,7 @@ import {
 import { ToolProgress } from "@/components/chat/ToolProgress";
 import { Todo, TodoChanges } from "@/types/todo";
 import { getToday, isIsoDate } from "@/utils/date";
+import { createShareLink } from "@/utils/share";
 import {
   ToolCallStatus,
   useAgentContext,
@@ -98,9 +99,18 @@ const deleteTodoParameters = z.object({
 
 const clearCompletedTodosParameters = z.object({});
 
+const shareTodoListParameters = z.object({
+  from: z
+    .string()
+    .describe("The name to show to the person who opens the link."),
+});
+
 // The model tends to leave a date out when it sends an item again, so only an
 // empty string removes it. A value that is not a date keeps the current one
-const resolveDate = (value: string | undefined, current: string | undefined) => {
+const resolveDate = (
+  value: string | undefined,
+  current: string | undefined,
+) => {
   if (value === undefined || (value !== "" && !isIsoDate(value))) {
     return current;
   }
@@ -150,7 +160,8 @@ const filledListSuggestions = {
     },
     {
       title: "Reword a task",
-      message: "Reword the first open task on my todo list to be more specific.",
+      message:
+        "Reword the first open task on my todo list to be more specific.",
     },
     {
       title: "Assign a task to Alex",
@@ -341,6 +352,17 @@ export const useTodoCopilot = ({
       ) : (
         <ToolProgress label="Clearing completed tasks..." />
       ),
+  });
+
+  useFrontendTool({
+    name: "shareTodoList",
+    description:
+      "Create a link that opens the user's todo list in another browser.",
+    parameters: shareTodoListParameters,
+    handler: async ({ from }) => ({
+      link: createShareLink(todos, from),
+      note: `The link holds ${todos.length} todo item(s). Give it to the user as is.`,
+    }),
   });
 
   // This tool has no handler: the run waits for the user to answer in the

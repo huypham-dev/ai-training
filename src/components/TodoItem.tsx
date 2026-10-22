@@ -98,6 +98,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   };
 
   const dateRange = formatDateRange(todo.startDate, todo.dueDate);
+  const isOverdue =
+    todo.dueDate !== undefined &&
+    todo.dueDate < new Date().toISOString().slice(0, 10);
 
   const dates = isScheduling ? (
     <div
@@ -164,6 +167,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           />
         </svg>
         {dateRange}
+        {isOverdue && <span className="font-medium text-danger">Overdue</span>}
       </button>
     )
   );
