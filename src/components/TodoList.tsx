@@ -10,6 +10,7 @@ import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
+import { WelcomeNote } from "./WelcomeNote";
 
 // Puts every sub-task right below the task it was broken down from
 const groupByParent = (todos: Todo[]): Todo[] => {
@@ -88,6 +89,7 @@ export const TodoList: React.FC = () => {
 
   return (
     <div>
+      <WelcomeNote />
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
