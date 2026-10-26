@@ -2,6 +2,8 @@ export interface Todo {
   id: string;
   text: string;
   isCompleted: boolean;
+  // A todo without it is Normal, so lists saved before it existed still load
+  isImportant?: boolean;
   assignedTo?: string;
   // The id of the task this one was broken down from
   parentId?: string;

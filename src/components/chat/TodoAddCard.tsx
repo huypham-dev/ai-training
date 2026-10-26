@@ -75,6 +75,11 @@ export const TodoAddCard: React.FC<TodoAddCardProps> = (props) => {
             return (
               <li key={todo.id} className="text-sm text-ink break-words">
                 {todo.text}
+                {todo.isImportant && (
+                  <span className="ml-2 text-xs font-medium text-accent-strong">
+                    Important
+                  </span>
+                )}
                 {dateRange && (
                   <span className="ml-2 text-xs text-ink-muted">
                     {dateRange}

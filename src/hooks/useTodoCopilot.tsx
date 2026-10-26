@@ -37,6 +37,12 @@ const updateTodoListParameters = z.object({
         isCompleted: z
           .boolean()
           .describe("The completion status of the todo item."),
+        isImportant: z
+          .boolean()
+          .optional()
+          .describe(
+            "Whether the todo item is Important (true) or Normal (false). Leave it out to keep the current value. A new item is Normal.",
+          ),
         assignedTo: z
           .string()
           .describe(
@@ -72,6 +78,12 @@ const updateTodoParameters = z.object({
     .boolean()
     .optional()
     .describe("The new completion status of the todo item."),
+  isImportant: z
+    .boolean()
+    .optional()
+    .describe(
+      "Mark the todo item as Important (true) or back to Normal (false).",
+    ),
   assignedTo: z
     .string()
     .optional()
@@ -100,7 +112,10 @@ const clearCompletedTodosParameters = z.object({});
 
 // The model tends to leave a date out when it sends an item again, so only an
 // empty string removes it. A value that is not a date keeps the current one
-const resolveDate = (value: string | undefined, current: string | undefined) => {
+const resolveDate = (
+  value: string | undefined,
+  current: string | undefined,
+) => {
   if (value === undefined || (value !== "" && !isIsoDate(value))) {
     return current;
   }
@@ -150,7 +165,8 @@ const filledListSuggestions = {
     },
     {
       title: "Reword a task",
-      message: "Reword the first open task on my todo list to be more specific.",
+      message:
+        "Reword the first open task on my todo list to be more specific.",
     },
     {
       title: "Assign a task to Alex",
@@ -230,6 +246,8 @@ export const useTodoCopilot = ({
         return {
           ...item,
           parentId: item.parentId ?? previous?.parentId,
+          // The model tends to leave `isImportant` out when it sends an item again
+          isImportant: item.isImportant ?? previous?.isImportant,
           startDate: resolveDate(item.startDate, previous?.startDate),
           dueDate: resolveDate(item.dueDate, previous?.dueDate),
         };
@@ -259,6 +277,7 @@ export const useTodoCopilot = ({
     name: "updateTodo",
     description:
       "Update a single existing todo item: rename it, mark it as completed or not, " +
+      "mark it as Important or Normal, " +
       "change who it is assigned to, or set its start date and due date. " +
       "Only pass the fields that change.",
     parameters: updateTodoParameters,
@@ -266,6 +285,7 @@ export const useTodoCopilot = ({
       id,
       text,
       isCompleted,
+      isImportant,
       assignedTo,
       startDate,
       dueDate,
@@ -281,6 +301,9 @@ export const useTodoCopilot = ({
       }
       if (isCompleted !== undefined) {
         changes.isCompleted = isCompleted;
+      }
+      if (isImportant !== undefined) {
+        changes.isImportant = isImportant;
       }
       if (assignedTo !== undefined) {
         changes.assignedTo = assignedTo.trim() || undefined;

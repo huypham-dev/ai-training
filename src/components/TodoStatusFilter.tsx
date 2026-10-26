@@ -16,7 +16,7 @@ export const TodoStatusFilter: React.FC<TodoStatusFilterProps> = ({
   onChange,
 }) => {
   return (
-    <fieldset className="mb-6 flex w-fit gap-1 rounded-xl bg-surface-sunken p-1">
+    <fieldset className="flex w-fit gap-1 rounded-xl bg-surface-sunken p-1">
       <legend className="sr-only">Show todos</legend>
       {options.map((option) => (
         <label key={option.value} className="cursor-pointer">

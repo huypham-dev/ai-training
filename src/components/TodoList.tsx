@@ -6,12 +6,18 @@ import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { Todo } from "@/types/todo";
 import { AddTodoForm } from "./AddTodoForm";
+import { TodoImportantFilter } from "./TodoImportantFilter";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
 
-// Puts every sub-task right below the task it was broken down from
+// Important first; the sort is stable, so the rest keeps its order
+const importantFirst = (a: Todo, b: Todo) =>
+  Number(Boolean(b.isImportant)) - Number(Boolean(a.isImportant));
+
+// Puts every sub-task right below the task it was broken down from, and the
+// important ones first among tasks of the same level
 const groupByParent = (todos: Todo[]): Todo[] => {
   const ids = new Set(todos.map((todo) => todo.id));
   const visited = new Set<string>();
@@ -23,12 +29,16 @@ const groupByParent = (todos: Todo[]): Todo[] => {
     visited.add(todo.id);
     return [
       todo,
-      ...todos.filter((child) => child.parentId === todo.id).flatMap(withSubTasks),
+      ...todos
+        .filter((child) => child.parentId === todo.id)
+        .sort(importantFirst)
+        .flatMap(withSubTasks),
     ];
   };
 
   const grouped = todos
     .filter((todo) => !todo.parentId || !ids.has(todo.parentId))
+    .sort(importantFirst)
     .flatMap(withSubTasks);
   // Tasks that are each other's parent have no top-level task to hang under
   return [...grouped, ...todos.filter((todo) => !visited.has(todo.id))];
@@ -56,6 +66,7 @@ export const TodoList: React.FC = () => {
   const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
+  const [onlyImportant, setOnlyImportant] = useState(false);
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -69,16 +80,19 @@ export const TodoList: React.FC = () => {
 
   const query = search.trim().toLowerCase();
   const groupedTodos = groupByParent(todos);
-  const isFiltered = query !== "" || status !== "all";
+  const isFiltered = query !== "" || status !== "all" || onlyImportant;
   const visibleTodos = isFiltered
     ? filterWithAncestors(
         groupedTodos,
         (todo) =>
           todo.text.toLowerCase().includes(query) &&
-          (status === "all" || todo.isCompleted === (status === "done")),
+          (status === "all" || todo.isCompleted === (status === "done")) &&
+          (!onlyImportant || Boolean(todo.isImportant)),
       )
     : groupedTodos;
-  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
+  const statusLabel =
+    { all: "", active: "active ", done: "completed " }[status] +
+    (onlyImportant ? "important " : "");
   const emptyMessage =
     query === ""
       ? `No ${statusLabel}todos`
@@ -91,7 +105,13 @@ export const TodoList: React.FC = () => {
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
-      <TodoStatusFilter value={status} onChange={setStatus} />
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <TodoStatusFilter value={status} onChange={setStatus} />
+        <TodoImportantFilter
+          value={onlyImportant}
+          onChange={setOnlyImportant}
+        />
+      </div>
       {todos.length > 0 && (
         <div className="mb-2 flex items-center gap-3">
           <p className="text-xs text-ink-muted" aria-live="polite">
@@ -119,7 +139,8 @@ export const TodoList: React.FC = () => {
               key={todo.id}
               todo={todo}
               parent={todos.find(
-                (parent) => parent.id === todo.parentId && parent.id !== todo.id,
+                (parent) =>
+                  parent.id === todo.parentId && parent.id !== todo.id,
               )}
               updateTodo={updateTodo}
               deleteTodo={deleteTodo}

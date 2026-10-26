@@ -12,6 +12,7 @@ const storedTodosSchema: z.ZodType<Todo[]> = z.array(
     id: z.string(),
     text: z.string(),
     isCompleted: z.boolean(),
+    isImportant: z.boolean().optional(),
     assignedTo: z.string().optional(),
     parentId: z.string().optional(),
     startDate: z.string().optional(),
@@ -35,8 +36,11 @@ const loadTodos = (): Todo[] | undefined => {
     return parsed.data.map((todo) => ({
       ...todo,
       startDate:
-        todo.startDate && isIsoDate(todo.startDate) ? todo.startDate : undefined,
-      dueDate: todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
+        todo.startDate && isIsoDate(todo.startDate)
+          ? todo.startDate
+          : undefined,
+      dueDate:
+        todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
     }));
   } catch {
     return undefined;

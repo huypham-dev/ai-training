@@ -3,8 +3,7 @@ import { formatDate } from "@/utils/date";
 
 // Result returned by the updateTodo copilot action
 export type TodoUpdateResult =
-  | { previous: Todo; todo: Todo }
-  | { error: string };
+  { previous: Todo; todo: Todo } | { error: string };
 
 interface TodoUpdateCardProps {
   // Tool results reach the chat as a JSON string
@@ -24,7 +23,7 @@ const ChangeRow: React.FC<{ label: string; children: React.ReactNode }> = ({
   children,
 }) => (
   <li className="flex items-baseline text-xs">
-    <span className="w-16 shrink-0 text-ink-muted">{label}</span>
+    <span className="w-20 shrink-0 text-ink-muted">{label}</span>
     <span className="min-w-0 break-words text-ink">{children}</span>
   </li>
 );
@@ -55,6 +54,11 @@ export const TodoUpdateCard: React.FC<TodoUpdateCardProps> = (props) => {
         {previous.isCompleted !== todo.isCompleted && (
           <ChangeRow label="Status">
             {todo.isCompleted ? "Completed" : "Reopened"}
+          </ChangeRow>
+        )}
+        {Boolean(previous.isImportant) !== Boolean(todo.isImportant) && (
+          <ChangeRow label="Importance">
+            {todo.isImportant ? "Important" : "Normal"}
           </ChangeRow>
         )}
         {previous.assignedTo !== todo.assignedTo && (
