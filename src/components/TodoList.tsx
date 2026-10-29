@@ -17,7 +17,7 @@ import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { Todo } from "@/types/todo";
-import { buildTodoTree, groupByParent } from "@/utils/todoOrder";
+import { TodoNode, buildTodoTree, groupByParent } from "@/utils/todoOrder";
 import { AddTodoForm } from "./AddTodoForm";
 import { DragHandle } from "./DragHandle";
 import { SortableTodo, SortableTodoData } from "./SortableTodo";
@@ -25,6 +25,9 @@ import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
+
+// How far above or below the list a top-level drop still counts, in px
+const TOP_LEVEL_DROP_SLACK = 48;
 
 // Siblings only, and slots by row not group, so a drop over a group lands after it
 const collideWithSiblings: CollisionDetection = ({
@@ -56,11 +59,13 @@ const collideWithSiblings: CollisionDetection = ({
   }
 
   const { x, y } = pointerCoordinates;
+  // Sub-task groups border other tasks, so only the top level gets slack
+  const tolerance = parentKey === "" ? TOP_LEVEL_DROP_SLACK : 0;
   const isInside =
     x >= Math.min(...siblings.map(({ rect }) => rect.left)) &&
     x <= Math.max(...siblings.map(({ rect }) => rect.right)) &&
-    y >= Math.min(...siblings.map(({ rect }) => rect.top)) &&
-    y <= Math.max(...siblings.map(({ rect }) => rect.bottom));
+    y >= Math.min(...siblings.map(({ rect }) => rect.top)) - tolerance &&
+    y <= Math.max(...siblings.map(({ rect }) => rect.bottom)) + tolerance;
   if (!isInside) {
     return [];
   }
@@ -134,12 +139,16 @@ export const TodoList: React.FC = () => {
     query === ""
       ? `No ${statusLabel}todos`
       : `No ${statusLabel}todos match "${search.trim()}"`;
+  // Tasks in a parent cycle never move, so they do not count as reorderable
+  const hasSiblings = (nodes: TodoNode[]): boolean =>
+    nodes.length > 1 || nodes.some((node) => hasSiblings(node.children));
+  const canReorder = hasSiblings(buildTodoTree(groupedTodos).roots);
   const reorderHint =
     query !== "" && status !== "all"
       ? "Clear search and show all to reorder"
       : query !== ""
         ? "Clear search to reorder"
-        : status !== "all"
+        : status !== "all" && canReorder
           ? "Show all to reorder"
           : "";
   const { roots, unreachable } = buildTodoTree(visibleTodos);
