@@ -1,37 +1,74 @@
 "use client";
 
+import {
+  CollisionDetection,
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { Todo } from "@/types/todo";
+import { buildTodoTree, groupByParent } from "@/utils/todoOrder";
 import { AddTodoForm } from "./AddTodoForm";
+import { DragHandle } from "./DragHandle";
+import { SortableTodo, SortableTodoData } from "./SortableTodo";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
 
-// Puts every sub-task right below the task it was broken down from
-const groupByParent = (todos: Todo[]): Todo[] => {
-  const ids = new Set(todos.map((todo) => todo.id));
-  const visited = new Set<string>();
+// Siblings only, and slots by row not group, so a drop over a group lands after it
+const collideWithSiblings: CollisionDetection = ({
+  active,
+  droppableContainers,
+  droppableRects,
+  pointerCoordinates,
+}) => {
+  const dataOf = (data: { current?: unknown }) =>
+    data.current as SortableTodoData | undefined;
+  const parentKey = dataOf(active.data)?.parentKey;
+  if (parentKey === undefined || !pointerCoordinates) {
+    return [];
+  }
+  const siblings = droppableContainers
+    .filter(
+      (container) =>
+        dataOf(container.data)?.parentKey === parentKey &&
+        droppableRects.has(container.id),
+    )
+    .map((container) => ({
+      id: container.id,
+      rect: droppableRects.get(container.id)!,
+      rowHeight: dataOf(container.data)?.rowRef.current?.offsetHeight,
+    }))
+    .sort((a, b) => a.rect.top - b.rect.top);
+  if (siblings.length === 0) {
+    return [];
+  }
 
-  const withSubTasks = (todo: Todo): Todo[] => {
-    if (visited.has(todo.id)) {
-      return [];
-    }
-    visited.add(todo.id);
-    return [
-      todo,
-      ...todos.filter((child) => child.parentId === todo.id).flatMap(withSubTasks),
-    ];
-  };
-
-  const grouped = todos
-    .filter((todo) => !todo.parentId || !ids.has(todo.parentId))
-    .flatMap(withSubTasks);
-  // Tasks that are each other's parent have no top-level task to hang under
-  return [...grouped, ...todos.filter((todo) => !visited.has(todo.id))];
+  const { x, y } = pointerCoordinates;
+  const isInside =
+    x >= Math.min(...siblings.map(({ rect }) => rect.left)) &&
+    x <= Math.max(...siblings.map(({ rect }) => rect.right)) &&
+    y >= Math.min(...siblings.map(({ rect }) => rect.top)) &&
+    y <= Math.max(...siblings.map(({ rect }) => rect.bottom));
+  if (!isInside) {
+    return [];
+  }
+  const slot = siblings.filter(
+    ({ id, rect, rowHeight }) =>
+      id !== active.id && rect.top + (rowHeight ?? rect.height) / 2 < y,
+  ).length;
+  return [{ id: siblings[slot].id }];
 };
 
 // Keeps the tasks above a matching sub-task, so it never shows without its parent
@@ -53,9 +90,21 @@ const filterWithAncestors = (
 
 export const TodoList: React.FC = () => {
   const store = useTodos();
-  const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
+  const {
+    todos,
+    addTodo,
+    updateTodo,
+    deleteTodo,
+    clearCompletedTodos,
+    moveTodo,
+  } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
+
+  // The distance lets a tap on the handle stay a tap
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -78,11 +127,29 @@ export const TodoList: React.FC = () => {
           (status === "all" || todo.isCompleted === (status === "done")),
       )
     : groupedTodos;
-  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
+  const statusLabel = { all: "", active: "active ", done: "completed " }[
+    status
+  ];
   const emptyMessage =
     query === ""
       ? `No ${statusLabel}todos`
       : `No ${statusLabel}todos match "${search.trim()}"`;
+  const reorderHint =
+    query !== "" && status !== "all"
+      ? "Clear search and show all to reorder"
+      : query !== ""
+        ? "Clear search to reorder"
+        : status !== "all"
+          ? "Show all to reorder"
+          : "";
+  const { roots, unreachable } = buildTodoTree(visibleTodos);
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && over.id !== active.id) {
+      moveTodo(String(active.id), String(over.id));
+    }
+  };
+
   const completedCount = todos.filter((todo) => todo.isCompleted).length;
   const activeCount = todos.length - completedCount;
 
@@ -90,7 +157,7 @@ export const TodoList: React.FC = () => {
     <div>
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
-      <TodoSearch value={search} onChange={setSearch} />
+      <TodoSearch value={search} onChange={setSearch} hint={reorderHint} />
       <TodoStatusFilter value={status} onChange={setStatus} />
       {todos.length > 0 && (
         <div className="mb-2 flex items-center gap-3">
@@ -113,21 +180,47 @@ export const TodoList: React.FC = () => {
         {isFiltered && visibleTodos.length === 0 && emptyMessage}
       </p>
       {visibleTodos.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {visibleTodos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              parent={todos.find(
-                (parent) => parent.id === todo.parentId && parent.id !== todo.id,
-              )}
-              updateTodo={updateTodo}
-              deleteTodo={deleteTodo}
-              breakDownTodo={breakDownTodo}
-              isCopilotBusy={isBusy}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={collideWithSiblings}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={roots.map((node) => node.todo.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-3">
+              {roots.map((node) => (
+                <SortableTodo
+                  key={node.todo.id}
+                  node={node}
+                  // Positions among hidden tasks are unclear, so reordering needs the full list
+                  isReorderLocked={isFiltered}
+                  updateTodo={updateTodo}
+                  deleteTodo={deleteTodo}
+                  breakDownTodo={breakDownTodo}
+                  isCopilotBusy={isBusy}
+                />
+              ))}
+              {/* Tasks that are each other's parent belong to no group, so they cannot move */}
+              {unreachable.map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  parent={todos.find(
+                    (parent) =>
+                      parent.id === todo.parentId && parent.id !== todo.id,
+                  )}
+                  updateTodo={updateTodo}
+                  deleteTodo={deleteTodo}
+                  breakDownTodo={breakDownTodo}
+                  isCopilotBusy={isBusy}
+                  dragHandle={<DragHandle isLocked />}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

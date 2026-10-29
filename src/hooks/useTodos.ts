@@ -1,5 +1,6 @@
 import { Todo, TodoChanges } from "@/types/todo";
 import { isIsoDate } from "@/utils/date";
+import { moveTodoBlock } from "@/utils/todoOrder";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -62,6 +63,8 @@ export interface TodoStore {
   upsertTodos: (items: Todo[]) => void;
   // Removes every completed item and returns the removed ones
   clearCompletedTodos: () => Todo[];
+  // Moves a task and its sub-tasks to the place of another task with the same parent
+  moveTodo: (activeId: string, overId: string) => void;
 }
 
 export const useTodos = (): TodoStore => {
@@ -146,6 +149,13 @@ export const useTodos = (): TodoStore => {
     return cleared;
   }, [commit]);
 
+  const moveTodo = useCallback(
+    (activeId: string, overId: string) => {
+      commit((todos) => moveTodoBlock(todos, activeId, overId));
+    },
+    [commit],
+  );
+
   return {
     todos,
     getTodos,
@@ -154,5 +164,6 @@ export const useTodos = (): TodoStore => {
     deleteTodo,
     upsertTodos,
     clearCompletedTodos,
+    moveTodo,
   };
 };
