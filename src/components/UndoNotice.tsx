@@ -3,23 +3,39 @@ import { useEffect, useRef, useState } from "react";
 const TIMEOUT_MS = 8000;
 
 interface UndoNoticeProps {
+  // A new id restarts the countdown, also when the message stays the same
+  id: number;
   message: string;
   onUndo: () => void;
   onDismiss: () => void;
 }
 
 export const UndoNotice: React.FC<UndoNoticeProps> = ({
+  id,
   message,
   onUndo,
   onDismiss,
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
   const remainingRef = useRef(TIMEOUT_MS);
+  const countedIdRef = useRef(id);
   const isPaused = isHovered || hasFocus;
+
+  // mouseenter does not fire for a pointer that is already there when it shows
+  useEffect(() => {
+    if (ref.current?.matches(":hover")) {
+      setIsHovered(true);
+    }
+  }, []);
 
   // The countdown keeps what is left while paused and resumes from there
   useEffect(() => {
+    if (countedIdRef.current !== id) {
+      countedIdRef.current = id;
+      remainingRef.current = TIMEOUT_MS;
+    }
     if (isPaused) {
       return;
     }
@@ -29,11 +45,12 @@ export const UndoNotice: React.FC<UndoNoticeProps> = ({
       clearTimeout(timeout);
       remainingRef.current -= Date.now() - startedAt;
     };
-  }, [isPaused, onDismiss]);
+  }, [id, isPaused, onDismiss]);
 
   return (
     <div
-      className="flex items-center gap-3 rounded-xl border bg-surface px-4 py-3 shadow-card"
+      ref={ref}
+      className="mt-6 flex items-center gap-3 rounded-xl border bg-surface px-4 py-3 shadow-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setHasFocus(true)}

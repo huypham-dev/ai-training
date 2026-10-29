@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
-import { clearedMessage, deletedMessage, useUndo } from "@/hooks/useUndo";
+import { useUndo } from "@/hooks/useUndo";
 import { Todo } from "@/types/todo";
+import { childrenByParent } from "@/utils/todoTree";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
@@ -16,6 +17,7 @@ import { UndoNotice } from "./UndoNotice";
 // Puts every sub-task right below the task it was broken down from
 const groupByParent = (todos: Todo[]): Todo[] => {
   const ids = new Set(todos.map((todo) => todo.id));
+  const children = childrenByParent(todos);
   const visited = new Set<string>();
 
   const withSubTasks = (todo: Todo): Todo[] => {
@@ -25,9 +27,7 @@ const groupByParent = (todos: Todo[]): Todo[] => {
     visited.add(todo.id);
     return [
       todo,
-      ...todos
-        .filter((child) => child.parentId === todo.id)
-        .flatMap(withSubTasks),
+      ...(children.get(todo.id) ?? []).flatMap(withSubTasks),
     ];
   };
 
@@ -56,13 +56,14 @@ const filterWithAncestors = (
 };
 
 export const TodoList: React.FC = () => {
-  const store = useTodos();
+  const { store, pending, undo, dismiss } = useUndo(useTodos());
   const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
-  const { notice, offerUndo, undo, dismiss } = useUndo(store.restoreTodos);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
-  useTodoCopilot(store, offerUndo);
+  useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
 
   const breakDownTodo = (todo: Todo) => {
@@ -72,17 +73,16 @@ export const TodoList: React.FC = () => {
     );
   };
 
-  const deleteWithUndo = (id: string) => {
-    const todo = todos.find((todo) => todo.id === id);
-    if (todo) {
-      offerUndo(deletedMessage(todo.text), deleteTodo(id));
+  // The pressed button goes away with the notice, so the focus moves to the list
+  const keepFocus = (close: () => void) => {
+    const hadFocus = noticeRef.current?.contains(document.activeElement);
+    close();
+    if (hadFocus) {
+      rootRef.current?.focus();
     }
   };
-
-  const clearCompletedWithUndo = () => {
-    const removed = clearCompletedTodos();
-    offerUndo(clearedMessage(removed.length), removed);
-  };
+  const undoNotice = useCallback(() => keepFocus(undo), [undo]);
+  const dismissNotice = useCallback(() => keepFocus(dismiss), [dismiss]);
 
   const query = search.trim().toLowerCase();
   const groupedTodos = groupByParent(todos);
@@ -95,9 +95,7 @@ export const TodoList: React.FC = () => {
           (status === "all" || todo.isCompleted === (status === "done")),
       )
     : groupedTodos;
-  const statusLabel = { all: "", active: "active ", done: "completed " }[
-    status
-  ];
+  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
   const emptyMessage =
     query === ""
       ? `No ${statusLabel}todos`
@@ -106,7 +104,11 @@ export const TodoList: React.FC = () => {
   const activeCount = todos.length - completedCount;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      className="flex flex-1 flex-col outline-none"
+    >
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
@@ -119,7 +121,7 @@ export const TodoList: React.FC = () => {
           {completedCount > 0 && (
             <button
               type="button"
-              onClick={clearCompletedWithUndo}
+              onClick={clearCompletedTodos}
               className="rounded-sm text-xs font-medium text-ink-muted transition duration-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Clear completed
@@ -138,29 +140,28 @@ export const TodoList: React.FC = () => {
               key={todo.id}
               todo={todo}
               parent={todos.find(
-                (parent) =>
-                  parent.id === todo.parentId && parent.id !== todo.id,
+                (parent) => parent.id === todo.parentId && parent.id !== todo.id,
               )}
               updateTodo={updateTodo}
-              deleteTodo={deleteWithUndo}
+              deleteTodo={deleteTodo}
               breakDownTodo={breakDownTodo}
               isCopilotBusy={isBusy}
             />
           ))}
         </div>
       )}
-      {/* Pinned to the bottom of the screen inside this column, so it never
-          covers the chat. Kept mounted so screen readers announce it */}
+      {/* Kept mounted and shown, so screen readers announce what appears */}
       <div
-        className="sticky bottom-6 mt-auto pt-6 empty:hidden"
+        ref={noticeRef}
+        className="sticky bottom-6 mt-auto"
         aria-live="polite"
       >
-        {notice && (
+        {pending && (
           <UndoNotice
-            key={notice.id}
-            message={notice.message}
-            onUndo={undo}
-            onDismiss={dismiss}
+            id={pending.id}
+            message={pending.message}
+            onUndo={undoNotice}
+            onDismiss={dismissNotice}
           />
         )}
       </div>

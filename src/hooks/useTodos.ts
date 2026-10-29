@@ -1,5 +1,6 @@
 import { Todo, TodoChanges } from "@/types/todo";
 import { isIsoDate } from "@/utils/date";
+import { withDescendants } from "@/utils/todoTree";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -35,11 +36,8 @@ const loadTodos = (): Todo[] | undefined => {
     return parsed.data.map((todo) => ({
       ...todo,
       startDate:
-        todo.startDate && isIsoDate(todo.startDate)
-          ? todo.startDate
-          : undefined,
-      dueDate:
-        todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
+        todo.startDate && isIsoDate(todo.startDate) ? todo.startDate : undefined,
+      dueDate: todo.dueDate && isIsoDate(todo.dueDate) ? todo.dueDate : undefined,
     }));
   } catch {
     return undefined;
@@ -59,24 +57,6 @@ export interface RemovedTodo {
   todo: Todo;
   index: number;
 }
-
-// The given tasks with all their sub-tasks, sub-tasks of those, and so on
-const withDescendants = (todos: Todo[], rootIds: string[]): Set<string> => {
-  const ids = new Set<string>();
-  const queue = [...rootIds];
-  while (queue.length > 0) {
-    const id = queue.shift()!;
-    // Tasks that are each other's parent would loop forever
-    if (ids.has(id)) {
-      continue;
-    }
-    ids.add(id);
-    queue.push(
-      ...todos.filter((todo) => todo.parentId === id).map((todo) => todo.id),
-    );
-  }
-  return ids;
-};
 
 export interface TodoStore {
   todos: Todo[];
@@ -199,8 +179,7 @@ export const useTodos = (): TodoStore => {
     (removed: RemovedTodo[]) => {
       commit((todos) => {
         const newTodos = [...todos];
-        // In index order, so each item lands where it was relative to the ones
-        // before it. An index past the end, after a skipped item, means the end
+        // In index order, so earlier items are back before later ones land
         const sorted = [...removed].sort((a, b) => a.index - b.index);
         for (const { todo, index } of sorted) {
           if (!newTodos.some((existing) => existing.id === todo.id)) {

@@ -23,7 +23,6 @@ import {
 } from "@copilotkit/react-core/v2";
 import { z } from "zod";
 import { TodoStore } from "./useTodos";
-import { OfferUndo, clearedMessage, deletedMessage } from "./useUndo";
 
 const updateTodoListParameters = z.object({
   items: z
@@ -101,10 +100,7 @@ const clearCompletedTodosParameters = z.object({});
 
 // The model tends to leave a date out when it sends an item again, so only an
 // empty string removes it. A value that is not a date keeps the current one
-const resolveDate = (
-  value: string | undefined,
-  current: string | undefined,
-) => {
+const resolveDate = (value: string | undefined, current: string | undefined) => {
   if (value === undefined || (value !== "" && !isIsoDate(value))) {
     return current;
   }
@@ -154,8 +150,7 @@ const filledListSuggestions = {
     },
     {
       title: "Reword a task",
-      message:
-        "Reword the first open task on my todo list to be more specific.",
+      message: "Reword the first open task on my todo list to be more specific.",
     },
     {
       title: "Assign a task to Alex",
@@ -195,17 +190,14 @@ const followUpSuggestions = {
 
 // Connects the todo list to the copilot: the agent can read the list and
 // change it through the tools below
-export const useTodoCopilot = (
-  {
-    todos,
-    getTodos,
-    updateTodo,
-    deleteTodo,
-    upsertTodos,
-    clearCompletedTodos,
-  }: TodoStore,
-  offerUndo: OfferUndo,
-) => {
+export const useTodoCopilot = ({
+  todos,
+  getTodos,
+  updateTodo,
+  deleteTodo,
+  upsertTodos,
+  clearCompletedTodos,
+}: TodoStore) => {
   useAgentContext({
     description: "The user's todo list.",
     value: JSON.stringify(todos),
@@ -334,7 +326,6 @@ export const useTodoCopilot = (
     parameters: clearCompletedTodosParameters,
     handler: async (): Promise<TodoClearResult> => {
       const removed = clearCompletedTodos();
-      offerUndo(clearedMessage(removed.length), removed);
       return {
         // Also the open sub-tasks that went with a completed task
         cleared: removed.map(({ todo }) => todo),
@@ -358,8 +349,8 @@ export const useTodoCopilot = (
   useHumanInTheLoop({
     name: "deleteTodo",
     description:
-      "Delete a todo item. The user is asked to confirm, so do not ask them " +
-      "yourself before calling this tool.",
+      "Delete a todo item together with all its sub-tasks. The user is asked " +
+      "to confirm, so do not ask them yourself before calling this tool.",
     parameters: deleteTodoParameters,
     render: (props) => {
       if (props.status === ToolCallStatus.InProgress) {
@@ -382,11 +373,14 @@ export const useTodoCopilot = (
             note: `No todo item found with id "${args.id}".`,
           };
         } else if (isConfirmed) {
-          offerUndo(deletedMessage(todo.text), deleteTodo(todo.id));
+          const removed = deleteTodo(todo.id);
           result = {
             deleted: true,
             text: todo.text,
-            note: "The user confirmed and the todo item was deleted.",
+            note:
+              removed.length > 1
+                ? `The user confirmed and the todo item was deleted with its ${removed.length - 1} sub-task(s).`
+                : "The user confirmed and the todo item was deleted.",
           };
         } else {
           result = {
