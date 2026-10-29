@@ -45,7 +45,9 @@ All paths are under `src/`.
 Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 
 - `format-on-edit.sh` (PostToolUse): runs Prettier on a `.ts`, `.tsx`, `.js`, `.json` or `.css` file after Claude edits it. Markdown is skipped so the tables in `DESIGN.md` keep their layout.
+- `typecheck.sh` (PostToolUse): runs `pnpm exec tsc --noEmit` after Claude edits a `.ts` or `.tsx` file and sends any errors back to Claude.
 - `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
+- `protect-files.sh` (PreToolUse, Edit/Write): blocks edits to `.env*.local`, `pnpm-lock.yaml` and `package-lock.json`. Env files hold secrets, and lock files change only through pnpm.
 - `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
 
 ## MCP servers

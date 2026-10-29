@@ -9,6 +9,15 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-forbidden-command.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -18,6 +27,12 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typecheck.sh",
+            "timeout": 60,
+            "statusMessage": "Type checking..."
           }
         ]
       }
