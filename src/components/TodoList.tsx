@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
+import { clearedMessage, deletedMessage, useUndo } from "@/hooks/useUndo";
 import { Todo } from "@/types/todo";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
+import { UndoNotice } from "./UndoNotice";
 
 // Puts every sub-task right below the task it was broken down from
 const groupByParent = (todos: Todo[]): Todo[] => {
@@ -23,7 +25,9 @@ const groupByParent = (todos: Todo[]): Todo[] => {
     visited.add(todo.id);
     return [
       todo,
-      ...todos.filter((child) => child.parentId === todo.id).flatMap(withSubTasks),
+      ...todos
+        .filter((child) => child.parentId === todo.id)
+        .flatMap(withSubTasks),
     ];
   };
 
@@ -56,8 +60,9 @@ export const TodoList: React.FC = () => {
   const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
+  const { notice, offerUndo, undo, dismiss } = useUndo(store.restoreTodos);
 
-  useTodoCopilot(store);
+  useTodoCopilot(store, offerUndo);
   const { askCopilot, isBusy } = useAskCopilot();
 
   const breakDownTodo = (todo: Todo) => {
@@ -65,6 +70,18 @@ export const TodoList: React.FC = () => {
       `Break down the task "${todo.text}" (id "${todo.id}") into a few smaller ` +
         `tasks and add them to my todo list with "${todo.id}" as their parentId.`,
     );
+  };
+
+  const deleteWithUndo = (id: string) => {
+    const todo = todos.find((todo) => todo.id === id);
+    if (todo) {
+      offerUndo(deletedMessage(todo.text), deleteTodo(id));
+    }
+  };
+
+  const clearCompletedWithUndo = () => {
+    const removed = clearCompletedTodos();
+    offerUndo(clearedMessage(removed.length), removed);
   };
 
   const query = search.trim().toLowerCase();
@@ -78,7 +95,9 @@ export const TodoList: React.FC = () => {
           (status === "all" || todo.isCompleted === (status === "done")),
       )
     : groupedTodos;
-  const statusLabel = { all: "", active: "active ", done: "completed " }[status];
+  const statusLabel = { all: "", active: "active ", done: "completed " }[
+    status
+  ];
   const emptyMessage =
     query === ""
       ? `No ${statusLabel}todos`
@@ -87,7 +106,7 @@ export const TodoList: React.FC = () => {
   const activeCount = todos.length - completedCount;
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
@@ -100,7 +119,7 @@ export const TodoList: React.FC = () => {
           {completedCount > 0 && (
             <button
               type="button"
-              onClick={clearCompletedTodos}
+              onClick={clearCompletedWithUndo}
               className="rounded-sm text-xs font-medium text-ink-muted transition duration-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Clear completed
@@ -119,16 +138,32 @@ export const TodoList: React.FC = () => {
               key={todo.id}
               todo={todo}
               parent={todos.find(
-                (parent) => parent.id === todo.parentId && parent.id !== todo.id,
+                (parent) =>
+                  parent.id === todo.parentId && parent.id !== todo.id,
               )}
               updateTodo={updateTodo}
-              deleteTodo={deleteTodo}
+              deleteTodo={deleteWithUndo}
               breakDownTodo={breakDownTodo}
               isCopilotBusy={isBusy}
             />
           ))}
         </div>
       )}
+      {/* Pinned to the bottom of the screen inside this column, so it never
+          covers the chat. Kept mounted so screen readers announce it */}
+      <div
+        className="sticky bottom-6 mt-auto pt-6 empty:hidden"
+        aria-live="polite"
+      >
+        {notice && (
+          <UndoNotice
+            key={notice.id}
+            message={notice.message}
+            onUndo={undo}
+            onDismiss={dismiss}
+          />
+        )}
+      </div>
     </div>
   );
 };

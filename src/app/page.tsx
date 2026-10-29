@@ -7,8 +7,8 @@ export default function Home() {
     <div className="flex min-h-[100dvh]">
       <TodoThreadsDrawer />
       <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
-        <main className="min-w-0 flex-1 px-6 py-12">
-          <div className="mx-auto max-w-3xl">
+        <main className="flex min-w-0 flex-1 flex-col px-6 py-12">
+          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
             <TodoList />
           </div>
         </main>

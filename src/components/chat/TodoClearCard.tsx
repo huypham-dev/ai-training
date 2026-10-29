@@ -21,7 +21,7 @@ const parseResult = (result: string): TodoClearResult | undefined => {
   }
 };
 
-// Shows the completed tasks that the copilot cleared from the list
+// Shows the completed tasks, and their sub-tasks, that the copilot cleared
 export const TodoClearCard: React.FC<TodoClearCardProps> = (props) => {
   const result = parseResult(props.result);
 
@@ -41,15 +41,17 @@ export const TodoClearCard: React.FC<TodoClearCardProps> = (props) => {
         {cleared.length === 0
           ? "No completed tasks to clear"
           : cleared.length === 1
-            ? "1 completed task cleared"
-            : `${cleared.length} completed tasks cleared`}
+            ? "1 task cleared"
+            : `${cleared.length} tasks cleared`}
       </p>
       {cleared.length > 0 && (
         <ul className="mt-1">
           {cleared.map((todo) => (
             <li
               key={todo.id}
-              className="text-sm text-ink-muted line-through break-words"
+              className={`text-sm text-ink-muted break-words ${
+                todo.isCompleted ? "line-through" : ""
+              }`}
             >
               {todo.text}
             </li>
