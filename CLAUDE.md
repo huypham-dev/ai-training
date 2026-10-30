@@ -20,13 +20,14 @@ pnpm build    # also the type check
 
 ## Stack
 
-Next.js 14 (App Router), React 18, TypeScript strict, Tailwind CSS 4 (tokens in `@theme` in `globals.css`, no `tailwind.config.js`), CopilotKit 1.77 (v2 entry points), zod 4.
+Next.js 14 (App Router), React 18, TypeScript strict, Tailwind CSS 4 (tokens in `@theme` in `globals.css`, no `tailwind.config.js`), CopilotKit 1.77 (v2 entry points), zod 4, dnd-kit (`@dnd-kit/core` 6, `@dnd-kit/sortable` 10) for drag and drop.
 
 ## Architecture
 
 All paths are under `src/`.
 
-- Todos live in React state inside `hooks/useTodos.ts`, which also saves them to `localStorage` (key `todos`) and loads them back after mount.
+- Todos live in React state inside `hooks/useTodos.ts`, which also saves them to `localStorage` (key `todos`) and loads them back after mount. The list order is the order of that array.
+- `utils/todoOrder.ts` groups sub-tasks under their parent, builds the tree that is shown and moves a task with all of its sub-tasks among its siblings (`moveTodo` in the store). `components/TodoList.tsx` renders the tree with `components/SortableTodo.tsx`; its collision detection keeps a drag among the siblings. Reordering is locked while the search has text or the status filter is not "All".
 - `components/TodoList.tsx` creates the store and passes it to `hooks/useTodoCopilot.tsx`, which shares the list with the agent (`useAgentContext`) and registers four frontend tools: `updateTodoList` (upsert many), `updateTodo` (change one), `deleteTodo` and `clearCompletedTodos` (remove all completed). Deleting or clearing a task also removes all its sub-tasks, and `hooks/useUndo.ts` wraps those two store functions so the latest removal can be undone. Pass the wrapped store on, so new callers get Undo too.
 - `components/TodoList.tsx` also writes the active todo count into the tab title. The base title lives in `utils/title.ts`, which `metadata` in `app/layout.tsx` also uses.
 - The agent runs on the server in `app/api/copilotkit/[[...slug]]/route.ts`. The tools run in the browser and change the store.
@@ -70,7 +71,7 @@ Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
 
 - **Components**: one per file, file name in PascalCase, named export, written as `export const Name: React.FC<NameProps> = (...) => {}`, with `interface NameProps` directly above.
 - **Imports**: `@/` for anything outside the current folder, `./` for a file next to it.
-- **Styling**: Tailwind utility classes in `className`. No CSS modules and no inline `style`.
+- **Styling**: Tailwind utility classes in `className`. No CSS modules and no inline `style`, except the drag offset in `SortableTodo`, which changes every frame.
 - **Comments**: one short line above the code, saying why and not what. Most code has none.
 
 ## GitHub Actions

@@ -11,6 +11,8 @@ interface TodoItemProps {
   deleteTodo: (id: string) => void;
   breakDownTodo: (todo: Todo) => void;
   isCopilotBusy: boolean;
+  // Shown first in the row, so the drag starts only from it
+  dragHandle?: React.ReactNode;
 }
 
 const actionButtonClassName =
@@ -31,6 +33,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   deleteTodo,
   breakDownTodo,
   isCopilotBusy,
+  dragHandle,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -180,6 +183,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     >
       {/* The basis makes the actions wrap below before the text gets too narrow */}
       <div className="flex min-w-0 grow basis-64 items-start">
+        {dragHandle}
         {parent && (
           <span
             className="mt-0.5 mr-2 shrink-0 text-ink-muted"
