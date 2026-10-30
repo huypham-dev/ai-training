@@ -3,7 +3,10 @@ import {
   CopilotKitIntelligence,
   CopilotRuntime,
   createCopilotRuntimeHandler,
+  IntelligenceAgentRunner,
 } from "@copilotkit/runtime/v2";
+import { waitUntil } from "@vercel/functions";
+import { finalize } from "rxjs";
 
 const prompt = `
 ## Overview
@@ -157,6 +160,22 @@ const runtime = intelligenceApiKey
       identifyUser: () => ({ id: "local-user", name: "Local user" }),
     })
   : new CopilotRuntime({ agents });
+
+// Intelligence answers /run before the agent ends; keep the Vercel function alive until it does
+const runner = runtime.runner;
+if (runner instanceof IntelligenceAgentRunner) {
+  const runWithStartupBoundary = runner.runWithStartupBoundary.bind(runner);
+  runner.runWithStartupBoundary = (request) => {
+    const { events, startup } = runWithStartupBoundary(request);
+    let runEnded = () => {};
+    waitUntil(new Promise<void>((resolve) => (runEnded = resolve)));
+    return { events: events.pipe(finalize(() => runEnded())), startup };
+  };
+} else if (intelligenceApiKey) {
+  console.warn(
+    "[copilotkit] The Intelligence runner is not an IntelligenceAgentRunner, so runs are not kept alive with waitUntil. On Vercel the chat will fail with 'Runner connection dropped'.",
+  );
+}
 
 const handler = createCopilotRuntimeHandler({
   runtime,
