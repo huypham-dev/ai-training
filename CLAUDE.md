@@ -46,9 +46,17 @@ Set in `.claude/settings.json`, scripts in `.claude/hooks/`. They need `jq`.
 
 - `format-on-edit.sh` (PostToolUse): runs Prettier on a `.ts`, `.tsx`, `.js`, `.json` or `.css` file after Claude edits it. Markdown is skipped so the tables in `DESIGN.md` keep their layout.
 - `block-forbidden-command.sh` (PreToolUse, Bash): blocks any `git push` to `main`, forced or not. Changes reach `main` through a PR.
-- `protect-files.sh` (PreToolUse, Edit/Write/Bash): blocks writes to `.env*.local`, `pnpm-lock.yaml` and `package-lock.json`, including shell redirects, `sed -i`, `tee`, `cp`, `mv` and `rm`. Reading them stays allowed. Env files hold secrets, and lock files change only through pnpm.
+- `protect-files.sh` (PreToolUse, Edit/Write/Bash): blocks writes to `.env*.local`, `pnpm-lock.yaml` and `package-lock.json`, including shell redirects, `sed -i`, `tee`, `cp`, `mv` and `rm`. Reading lock files stays allowed. Env files hold secrets, and lock files change only through pnpm.
 - `typecheck.sh` (Stop): when `.ts` or `.tsx` files have changed, runs `tsc --noEmit` once at the end of the turn and sends any errors back to Claude. It retries once per turn and skips when dependencies are not installed.
 - `notify-on-finish.sh` (Stop): shows a macOS notification when Claude finishes.
+
+## Claude Code permissions
+
+Also in `.claude/settings.json`. Personal rules go in `.claude/settings.local.json`.
+
+- `deny`: reading `.env*.local`, with the file tools or with `cat`, `head` and the like, so API keys stay out of the context. A script that opens the file itself is not covered.
+- `ask`: force pushes, `git reset --hard`, `git clean` and `rm -rf` always prompt.
+- `allow`: `pnpm build`, `tsc --noEmit`, `prettier --check` and read-only `gh pr`, `gh issue` and `gh run` commands run without a prompt.
 
 ## MCP servers
 
