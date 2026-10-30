@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
+import { useUndo } from "@/hooks/useUndo";
 import { Todo } from "@/types/todo";
+import { childrenByParent } from "@/utils/todoTree";
 import { APP_TITLE, formatTabTitle } from "@/utils/title";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
 import { TodoStatus, TodoStatusFilter } from "./TodoStatusFilter";
 import { TodoSuggestions } from "./TodoSuggestions";
+import { UndoNotice } from "./UndoNotice";
 
 // Puts every sub-task right below the task it was broken down from
 const groupByParent = (todos: Todo[]): Todo[] => {
   const ids = new Set(todos.map((todo) => todo.id));
+  const children = childrenByParent(todos);
   const visited = new Set<string>();
 
   const withSubTasks = (todo: Todo): Todo[] => {
@@ -24,7 +28,7 @@ const groupByParent = (todos: Todo[]): Todo[] => {
     visited.add(todo.id);
     return [
       todo,
-      ...todos.filter((child) => child.parentId === todo.id).flatMap(withSubTasks),
+      ...(children.get(todo.id) ?? []).flatMap(withSubTasks),
     ];
   };
 
@@ -53,10 +57,12 @@ const filterWithAncestors = (
 };
 
 export const TodoList: React.FC = () => {
-  const store = useTodos();
+  const { store, pending, undo, dismiss } = useUndo(useTodos());
   const { todos, addTodo, updateTodo, deleteTodo, clearCompletedTodos } = store;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<TodoStatus>("all");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
   useTodoCopilot(store);
   const { askCopilot, isBusy } = useAskCopilot();
@@ -67,6 +73,17 @@ export const TodoList: React.FC = () => {
         `tasks and add them to my todo list with "${todo.id}" as their parentId.`,
     );
   };
+
+  // The pressed button goes away with the notice, so the focus moves to the list
+  const keepFocus = (close: () => void) => {
+    const hadFocus = noticeRef.current?.contains(document.activeElement);
+    close();
+    if (hadFocus) {
+      rootRef.current?.focus();
+    }
+  };
+  const undoNotice = useCallback(() => keepFocus(undo), [undo]);
+  const dismissNotice = useCallback(() => keepFocus(dismiss), [dismiss]);
 
   const query = search.trim().toLowerCase();
   const groupedTodos = groupByParent(todos);
@@ -95,7 +112,11 @@ export const TodoList: React.FC = () => {
   }, [activeCount]);
 
   return (
-    <div>
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      className="flex flex-1 flex-col outline-none"
+    >
       <AddTodoForm addTodo={addTodo} />
       <TodoSuggestions askCopilot={askCopilot} isBusy={isBusy} />
       <TodoSearch value={search} onChange={setSearch} />
@@ -137,6 +158,21 @@ export const TodoList: React.FC = () => {
           ))}
         </div>
       )}
+      {/* Kept mounted and shown, so screen readers announce what appears */}
+      <div
+        ref={noticeRef}
+        className="sticky bottom-6 mt-auto"
+        aria-live="polite"
+      >
+        {pending && (
+          <UndoNotice
+            id={pending.id}
+            message={pending.message}
+            onUndo={undoNotice}
+            onDismiss={dismissNotice}
+          />
+        )}
+      </div>
     </div>
   );
 };

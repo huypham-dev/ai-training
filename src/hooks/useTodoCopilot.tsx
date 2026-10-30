@@ -325,13 +325,14 @@ export const useTodoCopilot = ({
       "It takes no arguments and does not ask the user to confirm.",
     parameters: clearCompletedTodosParameters,
     handler: async (): Promise<TodoClearResult> => {
-      const cleared = clearCompletedTodos();
+      const removed = clearCompletedTodos();
       return {
-        cleared,
+        // Also the open sub-tasks that went with a completed task
+        cleared: removed.map(({ todo }) => todo),
         note:
-          cleared.length === 0
+          removed.length === 0
             ? "There were no completed todo items, so nothing was removed."
-            : `Removed ${cleared.length} completed todo item(s). ` +
+            : `Removed ${removed.length} todo item(s): the completed ones and their sub-tasks. ` +
               "The request is done, do not call this tool again for it.",
       };
     },
@@ -348,8 +349,8 @@ export const useTodoCopilot = ({
   useHumanInTheLoop({
     name: "deleteTodo",
     description:
-      "Delete a todo item. The user is asked to confirm, so do not ask them " +
-      "yourself before calling this tool.",
+      "Delete a todo item together with all its sub-tasks. The user is asked " +
+      "to confirm, so do not ask them yourself before calling this tool.",
     parameters: deleteTodoParameters,
     render: (props) => {
       if (props.status === ToolCallStatus.InProgress) {
@@ -372,11 +373,14 @@ export const useTodoCopilot = ({
             note: `No todo item found with id "${args.id}".`,
           };
         } else if (isConfirmed) {
-          deleteTodo(todo.id);
+          const removed = deleteTodo(todo.id);
           result = {
             deleted: true,
             text: todo.text,
-            note: "The user confirmed and the todo item was deleted.",
+            note:
+              removed.length > 1
+                ? `The user confirmed and the todo item was deleted with its ${removed.length - 1} sub-task(s).`
+                : "The user confirmed and the todo item was deleted.",
           };
         } else {
           result = {
