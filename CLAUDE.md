@@ -70,7 +70,16 @@ Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
 - GitHub (remote `github`, `huypham-dev/ai-training`) works with the `gh` CLI, logged in as `huypham-dev`. Pull requests there go into `main`, the default branch.
 - Branch: `<type>/<short-name>`, like `feat/mcp-config` or `fix/border-button`.
 - Commit subject: `<type>: <summary>`, like `feat: add chat components for Copilot integration`.
-- Commit or push only when asked.
+- Commit or push only when asked. Running `/issue-to-pr` counts as asking for its own issue branch.
+
+## Issue to PR pipeline
+
+`/issue-to-pr <n>` (`.claude/skills/issue-to-pr/`) takes one issue to a reviewed PR. The skill is the only writer to GitHub and the board; the agents in `.claude/agents/` return text.
+
+- `issue-analyst` writes acceptance criteria or blocking questions, `planner` the plan, `developer` the code in `.claude/worktrees/issue-<n>`, `reviewer` a PASS or CHANGES verdict.
+- The user approves the acceptance criteria; after that the run commits, pushes and opens the PR on its own.
+- Up to 2 review fix rounds, then `needs-human`. State lives in the issue labels, the branch `<type>/issue-<n>-<short-name>` and board 3 (Status, Agent, Attempts), so a rerun resumes. Run it again on an issue with an open PR to address new PR comments.
+- `verify-change` and `open-pr` are separate skills the run calls and you can call alone.
 
 ## Do not guess
 
