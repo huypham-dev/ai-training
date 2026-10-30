@@ -1,6 +1,7 @@
 import { Todo, TodoChanges } from "@/types/todo";
 import { isIsoDate } from "@/utils/date";
 import { moveTodoBlock } from "@/utils/todoOrder";
+import { withDescendants } from "@/utils/todoTree";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -52,17 +53,26 @@ const saveTodos = (todos: Todo[]) => {
   }
 };
 
+// A removed task and where it was in the list, so Undo can put it back there
+export interface RemovedTodo {
+  todo: Todo;
+  index: number;
+}
+
 export interface TodoStore {
   todos: Todo[];
   // Reads the latest list, also between two renders
   getTodos: () => Todo[];
   addTodo: (text: string) => void;
   updateTodo: (id: string, changes: TodoChanges) => void;
-  deleteTodo: (id: string) => void;
+  // Removes the item with all its sub-tasks and returns the removed ones
+  deleteTodo: (id: string) => RemovedTodo[];
   // Replaces the items that already exist and appends the others
   upsertTodos: (items: Todo[]) => void;
-  // Removes every completed item and returns the removed ones
-  clearCompletedTodos: () => Todo[];
+  // Removes every completed item with all its sub-tasks and returns the removed ones
+  clearCompletedTodos: () => RemovedTodo[];
+  // Puts removed items back at their old index, skipping ids already on the list
+  restoreTodos: (removed: RemovedTodo[]) => void;
   // Moves a task and its sub-tasks to the place of another task with the same parent
   moveTodo: (activeId: string, overId: string) => void;
 }
@@ -116,11 +126,26 @@ export const useTodos = (): TodoStore => {
     [commit],
   );
 
-  const deleteTodo = useCallback(
-    (id: string) => {
-      commit((todos) => todos.filter((todo) => todo.id !== id));
+  const removeWithDescendants = useCallback(
+    (rootIds: string[]): RemovedTodo[] => {
+      const ids = withDescendants(todosRef.current, rootIds);
+      const removed = todosRef.current.flatMap((todo, index) =>
+        ids.has(todo.id) ? [{ todo, index }] : [],
+      );
+      if (removed.length > 0) {
+        commit((todos) => todos.filter((todo) => !ids.has(todo.id)));
+      }
+      return removed;
     },
     [commit],
+  );
+
+  const deleteTodo = useCallback(
+    (id: string) =>
+      todosRef.current.some((todo) => todo.id === id)
+        ? removeWithDescendants([id])
+        : [],
+    [removeWithDescendants],
   );
 
   const upsertTodos = useCallback(
@@ -143,11 +168,32 @@ export const useTodos = (): TodoStore => {
     [commit],
   );
 
-  const clearCompletedTodos = useCallback(() => {
-    const cleared = todosRef.current.filter((todo) => todo.isCompleted);
-    commit((todos) => todos.filter((todo) => !todo.isCompleted));
-    return cleared;
-  }, [commit]);
+  const clearCompletedTodos = useCallback(
+    () =>
+      removeWithDescendants(
+        todosRef.current
+          .filter((todo) => todo.isCompleted)
+          .map((todo) => todo.id),
+      ),
+    [removeWithDescendants],
+  );
+
+  const restoreTodos = useCallback(
+    (removed: RemovedTodo[]) => {
+      commit((todos) => {
+        const newTodos = [...todos];
+        // In index order, so earlier items are back before later ones land
+        const sorted = [...removed].sort((a, b) => a.index - b.index);
+        for (const { todo, index } of sorted) {
+          if (!newTodos.some((existing) => existing.id === todo.id)) {
+            newTodos.splice(Math.min(index, newTodos.length), 0, todo);
+          }
+        }
+        return newTodos;
+      });
+    },
+    [commit],
+  );
 
   const moveTodo = useCallback(
     (activeId: string, overId: string) => {
@@ -164,6 +210,7 @@ export const useTodos = (): TodoStore => {
     deleteTodo,
     upsertTodos,
     clearCompletedTodos,
+    restoreTodos,
     moveTodo,
   };
 };
