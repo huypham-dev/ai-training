@@ -161,9 +161,7 @@ const runtime = intelligenceApiKey
     })
   : new CopilotRuntime({ agents });
 
-// With Intelligence, /run answers before the agent is done and the agent keeps
-// running in the background. Vercel stops the function once it has answered,
-// so hold it open with waitUntil until the run ends
+// Intelligence answers /run before the agent ends; keep the Vercel function alive until it does
 const runner = runtime.runner;
 if (runner instanceof IntelligenceAgentRunner) {
   const runWithStartupBoundary = runner.runWithStartupBoundary.bind(runner);
@@ -173,6 +171,10 @@ if (runner instanceof IntelligenceAgentRunner) {
     waitUntil(new Promise<void>((resolve) => (runEnded = resolve)));
     return { events: events.pipe(finalize(() => runEnded())), startup };
   };
+} else if (intelligenceApiKey) {
+  console.warn(
+    "[copilotkit] The Intelligence runner is not an IntelligenceAgentRunner, so runs are not kept alive with waitUntil. On Vercel the chat will fail with 'Runner connection dropped'.",
+  );
 }
 
 const handler = createCopilotRuntimeHandler({
