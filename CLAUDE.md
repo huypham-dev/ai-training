@@ -64,6 +64,15 @@ Shared in `.mcp.json`: `playwright` (no setup) and `github` (remote server).
 - **Styling**: Tailwind utility classes in `className`. No CSS modules and no inline `style`.
 - **Comments**: one short line above the code, saying why and not what. Most code has none.
 
+## GitHub Actions
+
+In `.github/workflows/`, all on `anthropics/claude-code-action@v1` with the `CLAUDE_CODE_OAUTH_TOKEN` secret.
+
+- `claude.yml`: runs when a comment, review or new issue mentions `@claude`. One run at a time per issue or PR.
+- `claude-code-review.yml`: reviews a PR that changes code or build config. Skips drafts and fork PRs.
+- `claude-triage.yml`: labels a new issue that has no labels and does not mention `@claude` (one of `bug`, `enhancement`, `question`, `documentation`, plus `needs-triage` and maybe `needs-info`). It runs on Haiku and may only use `gh issue view/edit`.
+- Each run is capped with `--max-budget-usd`.
+
 ## Git
 
 - The `origin` remote is GitLab, so changes there are reviewed as merge requests.
