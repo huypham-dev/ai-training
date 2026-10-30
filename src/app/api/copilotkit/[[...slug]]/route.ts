@@ -3,7 +3,10 @@ import {
   CopilotKitIntelligence,
   CopilotRuntime,
   createCopilotRuntimeHandler,
+  IntelligenceAgentRunner,
 } from "@copilotkit/runtime/v2";
+import { waitUntil } from "@vercel/functions";
+import { finalize } from "rxjs";
 
 const prompt = `
 ## Overview
@@ -157,6 +160,20 @@ const runtime = intelligenceApiKey
       identifyUser: () => ({ id: "local-user", name: "Local user" }),
     })
   : new CopilotRuntime({ agents });
+
+// With Intelligence, /run answers before the agent is done and the agent keeps
+// running in the background. Vercel stops the function once it has answered,
+// so hold it open with waitUntil until the run ends
+const runner = runtime.runner;
+if (runner instanceof IntelligenceAgentRunner) {
+  const runWithStartupBoundary = runner.runWithStartupBoundary.bind(runner);
+  runner.runWithStartupBoundary = (request) => {
+    const { events, startup } = runWithStartupBoundary(request);
+    let runEnded = () => {};
+    waitUntil(new Promise<void>((resolve) => (runEnded = resolve)));
+    return { events: events.pipe(finalize(() => runEnded())), startup };
+  };
+}
 
 const handler = createCopilotRuntimeHandler({
   runtime,

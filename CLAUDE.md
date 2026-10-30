@@ -41,6 +41,7 @@ All paths are under `src/`.
 - Every store change goes through `commit` in `useTodos`, which keeps the ref, the state and `localStorage` in sync. Add new mutations the same way.
 - Tool handlers return an explicit result string or object. Without one the model tends to call the tool again.
 - The webpack block in `next.config.mjs` stubs `node:` imports that CopilotKit telemetry pulls into the client bundle. Keep it.
+- With Intelligence, `/run` answers before the agent is done. The route wraps the runner with `waitUntil` from `@vercel/functions` so Vercel keeps the function alive until the run ends. Keep it, or the chat fails on Vercel with "Runner connection dropped".
 
 ## Claude Code hooks
 
