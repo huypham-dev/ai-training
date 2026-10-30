@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAskCopilot } from "@/hooks/useAskCopilot";
 import { useTodoCopilot } from "@/hooks/useTodoCopilot";
 import { useTodos } from "@/hooks/useTodos";
 import { useUndo } from "@/hooks/useUndo";
 import { Todo } from "@/types/todo";
 import { childrenByParent } from "@/utils/todoTree";
+import { APP_TITLE, formatTabTitle } from "@/utils/title";
 import { AddTodoForm } from "./AddTodoForm";
 import { TodoItem } from "./TodoItem";
 import { TodoSearch } from "./TodoSearch";
@@ -102,6 +103,13 @@ export const TodoList: React.FC = () => {
       : `No ${statusLabel}todos match "${search.trim()}"`;
   const completedCount = todos.filter((todo) => todo.isCompleted).length;
   const activeCount = todos.length - completedCount;
+
+  useEffect(() => {
+    document.title = formatTabTitle(activeCount);
+    return () => {
+      document.title = APP_TITLE;
+    };
+  }, [activeCount]);
 
   return (
     <div
